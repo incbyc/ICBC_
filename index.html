@@ -25,6 +25,7 @@
             padding: 10px;
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            width: 260px; /* Match width with the title */
         }
 
         .leaflet-control-layers label {
@@ -59,6 +60,82 @@
             margin-right: 4px;
         }
 
+        .info.leaflet-control {
+            background-color: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            font-family: 'Segoe UI', sans-serif;
+            text-align: center;
+            width: 260px; /* Set consistent width for title and legend */
+        }
+
+        .info.leaflet-control img {
+            height: 85px; /* Bigger logo */
+            display: block;
+            margin: 0 auto 10px auto;
+        }
+
+        .info.leaflet-control h1 {
+            font-size: 20px;
+            margin: 0;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .legend-container {
+            position: relative;
+            width: 260px;
+            z-index: 1000;
+        }
+
+        .legend-toggle {
+            display: none;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: white;
+            border: 1px solid #aaa;
+            padding: 6px 12px;
+            font-size: 14px;
+            border-radius: 4px;
+            z-index: 1001;
+            cursor: pointer;
+        }
+
+        
+        .legend-toggle {
+            display: none;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: white;
+            border: 1px solid #aaa;
+            padding: 6px 12px;
+            font-size: 14px;
+            border-radius: 4px;
+            z-index: 999;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .leaflet-control-layers {
+                display: none;
+            }
+            .leaflet-control-layers.show {
+                display: block !important;
+            }
+            .legend-toggle {
+                display: block !important;
+            }
+        }
+
+        .leaflet-control-layers-overlays .legend-subheader {
+            font-weight: 200;
+            font-size: 30px;
+            margin-bottom: 6px;
+        }
+
 
         
         </style>
@@ -66,6 +143,7 @@
     </head>
     <body>
         <div id="map">
+            <button id="legendToggle" class="legend-toggle">☰ Legend</button>
         </div>
         <script src="js/qgis2web_expressions.js"></script>
         <script src="js/leaflet.js"></script>
@@ -106,7 +184,8 @@
             zoomControl:true, maxZoom:20, minZoom:3
         }).fitBounds([[-27.192638650332352,30.073272356187825],[-25.76025459999724,32.57482685070581]]);
         var hash = new L.Hash(map);
-        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        map.attributionControl.setPrefix('© 2025 ICBC Eswatini Map Viewer');
+
         var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
         var measureControl = new L.Control.Measure({
             position: 'topleft',
@@ -581,25 +660,45 @@
             }
         });
         map.addLayer(layer_HomeSites);
+        var title = new L.Control();
+        title.onAdd = function (map) {
+            var div = L.DomUtil.create('div', 'info leaflet-control');
+            div.innerHTML = '<img src="markers/CMLogo.svg" alt="Logo"><h1>ICBC Sites Eswatini</h1>';
+            return div;
+        };
+        title.addTo(map);
 
-            var title = new L.Control();
-            title.onAdd = function (map) {
-                var div = L.DomUtil.create('div', 'info leaflet-control');
-                div.innerHTML = '<img src="markers/CMLogo.svg" alt="Logo"><h1>ICBC SITES ESWATINI</h1>';
-                return div;
-            };
-            title.addTo(map);
         var baseMaps = {};
-        L.control.layers(baseMaps,{
+        var baseMaps = {};
+
+        var overlays = {
             '<img src="legend/ICBCSites_6.png" /> ICBC Sites': layer_ICBCSites_6,
             '<img src="legend/CMS_5.png" /> CMS': layer_CMS_5,
             '<img src="legend/Roads_4.png" /> Roads': layer_Roads_4,
             '<img src="legend/7kmCatchmentArea_3.png" /> 7km Catchment Area': layer_7kmCatchmentArea_3,
-            'eSwatini Regions<br /><table><tr><td style="text-align: center;"><img src="legend/eSwatiniRegions_2_Hhohho0.png" /></td><td>Hhohho</td></tr><tr><td style="text-align: center;"><img src="legend/eSwatiniRegions_2_Lubombo1.png" /></td><td>Lubombo</td></tr><tr><td style="text-align: center;"><img src="legend/eSwatiniRegions_2_Manzini2.png" /></td><td>Manzini</td></tr><tr><td style="text-align: center;"><img src="legend/eSwatiniRegions_2_Shiselweni3.png" /></td><td>Shiselweni</td></tr></table>': layer_eSwatiniRegions_2,
+            'Eswatini Regions<br /><table><tr><td style="text-align: center;"><img src="legend/eSwatiniRegions_2_Hhohho0.png" /></td><td>Hhohho</td></tr><tr><td style="text-align: center;"><img src="legend/eSwatiniRegions_2_Lubombo1.png" /></td><td>Lubombo</td></tr><tr><td style="text-align: center;"><img src="legend/eSwatiniRegions_2_Manzini2.png" /></td><td>Manzini</td></tr><tr><td style="text-align: center;"><img src="legend/eSwatiniRegions_2_Shiselweni3.png" /></td><td>Shiselweni</td></tr></table>': layer_eSwatiniRegions_2,
             "Google Sat Hybrid": layer_GoogleSatHybrid_1,
             "Open Street Map": layer_OpenStreetMap_0,
             '<img src="markers/house-icon.svg" height="14"/> Bubele Care': layer_HomeSites
-        }, {collapsed:false}).addTo(map);
+        };
+
+        var legendControl = L.control.layers(baseMaps, overlays, { collapsed: false });
+        legendControl.addTo(map);
+
+        setTimeout(() => {
+            const baseContainer = document.querySelector('.leaflet-control-layers-base');
+            const overlayContainer = document.querySelector('.leaflet-control-layers-overlays');
+
+            if (overlayContainer) {
+                const overlayHeader = document.createElement('div');
+                overlayHeader.textContent = 'Legend';
+                overlayHeader.className = 'legend-subheader';
+                overlayContainer.insertBefore(overlayHeader, overlayContainer.firstChild);
+            }
+        }, 0);
+
+
+
         setBounds();
         var i = 0;
         layer_Roads_4.eachLayer(function(layer) {
@@ -650,6 +749,22 @@
         map.on("layerremove", function(){
             resetLabels([layer_eSwatiniRegions_2,layer_Roads_4,layer_CMS_5,layer_ICBCSites_6]);
         });
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const toggle = document.getElementById("legendToggle");
+            const layersControl = document.getElementsByClassName("leaflet-control-layers")[0];
+            const content = document.getElementById("legendContent");
+
+            toggle.addEventListener("click", () => {
+                content.classList.toggle("show");
+            });
+        });
+        document.getElementById('legendToggle').addEventListener('click', () => {
+            const controls = document.getElementsByClassName('leaflet-control-layers')[0];
+            controls.classList.toggle('show');
+        });
+
         </script>
+
     </body>
 </html>
