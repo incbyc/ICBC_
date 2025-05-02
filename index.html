@@ -9,6 +9,7 @@
         <link rel="stylesheet" href="css/leaflet.css">
         <link rel="stylesheet" href="css/qgis2web.css"><link rel="stylesheet" href="css/fontawesome-all.min.css">
         <link rel="stylesheet" href="css/leaflet-measure.css">
+        
         <style>
         html, body, #map {
             width: 100%;
@@ -16,8 +17,52 @@
             padding: 0;
             margin: 0;
         }
+
+        .leaflet-control-layers {
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 15px;
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .leaflet-control-layers label {
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .info.leaflet-control {
+            background-color: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .info.leaflet-control img {
+            height: 32px;
+            margin-right: 10px;
+        }
+
+        .info.leaflet-control h2 {
+            font-size: 20px;
+            margin: 0;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .leaflet-control-layers-overlays img {
+            vertical-align: middle;
+            margin-right: 4px;
+        }
+
+
+        
         </style>
-        <title>CMS ICBC Sites in eSwatini</title>
+        <title>CMS ICBC Sites In Eswatini</title>
     </head>
     <body>
         <div id="map">
@@ -38,7 +83,10 @@
         <script src="data/Roads_4.js"></script>
         <script src="data/CMS_5.js"></script>
         <script src="data/ICBCSites_6.js"></script>
+        <script src="data/HomeSites.js"></script>
         <script>
+
+            
         var highlightLayer;
         function highlightFeature(e) {
             highlightLayer = e.target;
@@ -451,68 +499,32 @@
                 },
                 mouseover: highlightFeature,
             });
-            var popupContent = '<table>\
-                <tr>\
-                        <th scope="row">• Site Name</th>\
-                        <td>' + (feature.properties['Site Name'] !== null ? autolinker.link(feature.properties['Site Name'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <th scope="row">• Pastor&#39s Photo</th>\
-                        <td>' + (feature.properties['Pastors Photo'] !== null ? '<img src="images/' + String(feature.properties['Pastors Photo']).replace(/[\\\/:]/g, '_').trim() + '">' : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <th scope="row">• Pastor</th>\
-                        <td>' + (feature.properties['Pastor'] !== null ? autolinker.link(feature.properties['Pastor'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <th scope="row">• Year Constructed</th>\
-                        <td>' + (feature.properties['Year Constructed'] !== null ? autolinker.link(feature.properties['Year Constructed'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <th scope="row">• Region</th>\
-                        <td>' + (feature.properties['Region'] !== null ? autolinker.link(feature.properties['Region'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <th scope="row">• Water Source</th>\
-                        <td>' + (feature.properties['Water Source'] !== null ? autolinker.link(feature.properties['Water Source'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <th scope="row">• Projects</th>\
-                        <td>' + (feature.properties['Projects'] !== null ? autolinker.link(feature.properties['Projects'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <th scope="row">• PreSchool</th>\
-                        <td>' + (feature.properties['PreSchool'] !== null ? autolinker.link(feature.properties['PreSchool'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <th scope="row">• About</th>\
-                        <td>' + (feature.properties['About'] !== null ? autolinker.link(feature.properties['About'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <th scope="row">• Site Link</th>\
-                        <td>' + (feature.properties['Site Link'] !== null ? autolinker.link(feature.properties['Site Link'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <th scope="row">• Site Photo</th>\
-                        <td>' + (feature.properties['Photo'] !== null ? '<img src="images/' + String(feature.properties['Photo']).replace(/[\\\/:]/g, '_').trim() + '">' : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <th scope="row">• Ploughing Season</th>\
-                        <td>' + (feature.properties['Ploughing Season'] !== null ? autolinker.link(feature.properties['Ploughing Season'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <th scope="row">• Hours Ploughed</th>\
-                        <td>' + (feature.properties['Hours Ploughed'] !== null ? autolinker.link(feature.properties['Hours Ploughed'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <th scope="row">• Families Ploughed for</th>\
-                        <td>' + (feature.properties['Families Ploughed for'] !== null ? autolinker.link(feature.properties['Families Ploughed for'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <th scope="row">• Area Ploughed</th>\
-                        <td>' + (feature.properties['Area Ploughed'] !== null ? autolinker.link(feature.properties['Area Ploughed'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                </table>';
+            var popupContent = `
+                <div class="popup-icbc-wrapper">
+                    <div class="popup-header">
+                        <img src="markers/flames.svg" alt="logo" class="popup-logo">
+                        <h2 class="popup-title">${feature.properties['Site Name'] || ''}</h2>
+                    </div>
+                    <table class="popup-icbc">
+                        <tr>
+                            <th>Pastor's Photo</th>
+                            <td>${feature.properties['Pastors Photo'] ? '<img src="images/' + String(feature.properties['Pastors Photo']).replace(/[\\\/:]/g, '_').trim() + '" class="popup-pastor-img">' : ''}</td>
+                        </tr>
+                        <tr><th>Pastor</th><td>${feature.properties['Pastor'] || ''}</td></tr>
+                        <tr><th>Year Constructed</th><td>${feature.properties['Year Constructed'] || ''}</td></tr>
+                        <tr><th>Region</th><td>${feature.properties['Region'] || ''}</td></tr>
+                        <tr><th>Water Source</th><td>${feature.properties['Water Source'] || ''}</td></tr>
+                        <tr><th>Projects</th><td>${feature.properties['Projects'] || ''}</td></tr>
+                        <tr><th>PreSchool</th><td>${feature.properties['PreSchool'] || ''}</td></tr>
+                        <tr><th>About</th><td>${feature.properties['About'] || ''}</td></tr>
+                        <tr><th>Site Link</th><td>${feature.properties['Site Link'] || ''}</td></tr>
+                        <tr><th>Site Photo</th><td>${feature.properties['Photo'] ? '<img src="images/' + String(feature.properties['Photo']).replace(/[\\\/:]/g, '_').trim() + '" class="popup-site-img">' : ''}</td></tr>
+                        <tr><th>Ploughing Season</th><td>${feature.properties['Ploughing Season'] || ''}</td></tr>
+                        <tr><th>Hours Ploughed</th><td>${feature.properties['Hours Ploughed'] || ''}</td></tr>
+                        <tr><th>Families Ploughed for</th><td>${feature.properties['Families Ploughed for'] || ''}</td></tr>
+                        <tr><th>Area Ploughed</th><td>${feature.properties['Area Ploughed'] || ''}</td></tr>
+                    </table>
+                </div>`;
             layer.bindPopup(popupContent, {maxHeight: 400, maxWidth: 400});
         }
 
@@ -523,7 +535,7 @@
         rotationOrigin: 'center center',
         icon: L.icon({
             iconUrl: 'markers/flames.svg',
-            iconSize: [30.4, 30.4]
+            iconSize: [32, 32]
         }),
                 interactive: true,
             }
@@ -548,18 +560,46 @@
         });
         bounds_group.addLayer(layer_ICBCSites_6);
         map.addLayer(layer_ICBCSites_6);
+
+        var layer_HomeSites = new L.geoJson(json_HomeSites, {
+            pointToLayer: function (feature, latlng) {
+                return L.marker(latlng, {
+                    icon: L.icon({
+                        iconUrl: 'markers/house-icon.svg',
+                        iconSize: [10, 10]
+                    })
+                });
+            },
+            onEachFeature: function (feature, layer) {
+                //var props = feature.properties;
+                //var popupContent = `<strong>${props["Site"] || "Unnamed Site"}</strong><br>
+                //                    Family Code: ${props["Family Code"] || "N/A"}<br>
+                //                   Contact No: ${props["Contact No"] || "N/A"}<br>
+                //                    Region: ${props["Region"] || "N/A"}<br>
+                //                    No. of Children: ${props["No of Children"] || "N/A"}`;
+                //layer.bindPopup(popupContent);
+            }
+        });
+        map.addLayer(layer_HomeSites);
+
             var title = new L.Control();
             title.onAdd = function (map) {
-                this._div = L.DomUtil.create('div', 'info');
-                this.update();
-                return this._div;
-            };
-            title.update = function () {
-                this._div.innerHTML = '<h2>CMS ICBC Sites in eSwatini</h2>';
+                var div = L.DomUtil.create('div', 'info leaflet-control');
+                div.innerHTML = '<img src="markers/CMLogo.svg" alt="Logo"><h1>ICBC SITES ESWATINI</h1>';
+                return div;
             };
             title.addTo(map);
         var baseMaps = {};
-        L.control.layers(baseMaps,{'<img src="legend/ICBCSites_6.png" /> ICBC Sites': layer_ICBCSites_6,'<img src="legend/CMS_5.png" /> CMS': layer_CMS_5,'<img src="legend/Roads_4.png" /> Roads': layer_Roads_4,'<img src="legend/7kmCatchmentArea_3.png" /> 7km Catchment Area': layer_7kmCatchmentArea_3,'eSwatini Regions<br /><table><tr><td style="text-align: center;"><img src="legend/eSwatiniRegions_2_Hhohho0.png" /></td><td>Hhohho</td></tr><tr><td style="text-align: center;"><img src="legend/eSwatiniRegions_2_Lubombo1.png" /></td><td>Lubombo</td></tr><tr><td style="text-align: center;"><img src="legend/eSwatiniRegions_2_Manzini2.png" /></td><td>Manzini</td></tr><tr><td style="text-align: center;"><img src="legend/eSwatiniRegions_2_Shiselweni3.png" /></td><td>Shiselweni</td></tr></table>': layer_eSwatiniRegions_2,"Google Sat Hybrid": layer_GoogleSatHybrid_1,"Open Street Map": layer_OpenStreetMap_0,},{collapsed:false}).addTo(map);
+        L.control.layers(baseMaps,{
+            '<img src="legend/ICBCSites_6.png" /> ICBC Sites': layer_ICBCSites_6,
+            '<img src="legend/CMS_5.png" /> CMS': layer_CMS_5,
+            '<img src="legend/Roads_4.png" /> Roads': layer_Roads_4,
+            '<img src="legend/7kmCatchmentArea_3.png" /> 7km Catchment Area': layer_7kmCatchmentArea_3,
+            'eSwatini Regions<br /><table><tr><td style="text-align: center;"><img src="legend/eSwatiniRegions_2_Hhohho0.png" /></td><td>Hhohho</td></tr><tr><td style="text-align: center;"><img src="legend/eSwatiniRegions_2_Lubombo1.png" /></td><td>Lubombo</td></tr><tr><td style="text-align: center;"><img src="legend/eSwatiniRegions_2_Manzini2.png" /></td><td>Manzini</td></tr><tr><td style="text-align: center;"><img src="legend/eSwatiniRegions_2_Shiselweni3.png" /></td><td>Shiselweni</td></tr></table>': layer_eSwatiniRegions_2,
+            "Google Sat Hybrid": layer_GoogleSatHybrid_1,
+            "Open Street Map": layer_OpenStreetMap_0,
+            '<img src="markers/house-icon.svg" height="14"/> Bubele Care': layer_HomeSites
+        }, {collapsed:false}).addTo(map);
         setBounds();
         var i = 0;
         layer_Roads_4.eachLayer(function(layer) {
