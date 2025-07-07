@@ -33,6 +33,12 @@
             display: block;
         }
 
+        .leaflet-control-layers .leaflet-control-layers-list,
+        .leaflet-control-layers label {
+            font-size: 14px;
+            padding: 4px 6px;
+        }
+
         .info.leaflet-control {
             background-color: white;
             padding: 10px;
@@ -91,7 +97,7 @@
 
         .legend-toggle {
             display: none;
-            position: absolute;
+            position: fixed; /* Change from absolute to fixed */
             top: 10px;
             right: 10px;
             background-color: white;
@@ -99,41 +105,31 @@
             padding: 6px 12px;
             font-size: 14px;
             border-radius: 4px;
-            z-index: 1001;
+            z-index: 1001; /* Higher than leaflet controls */
             cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
-
-        
-        .legend-toggle {
-            display: none;
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background-color: white;
-            border: 1px solid #aaa;
-            padding: 6px 12px;
-            font-size: 14px;
-            border-radius: 4px;
-            z-index: 999;
-            cursor: pointer;
-        }
-
         @media (max-width: 768px) {
             .leaflet-control-layers {
                 display: none;
+                width: 260px !important;        /* same as your .info.leaflet-control */
+                max-height: none    !important; /* let it grow only as tall as you allow */
+                overflow-y: auto    !important; /* scroll if there are too many items */
             }
             .leaflet-control-layers.show {
                 display: block !important;
             }
             .legend-toggle {
                 display: block !important;
+                top: 90px; /* 👈 Move it below the title */
+                right: 10px;
             }
         }
 
         .leaflet-control-layers-overlays .legend-subheader {
             font-weight: 200;
-            font-size: 30px;
-            margin-bottom: 6px;
+            font-size: 16px;
+            margin-bottom: 4px;
         }
 
         @media (max-width: 600px) {
@@ -151,10 +147,93 @@
             .info.leaflet-control h1 {
                 font-size: 16px;
             }
+
+    
         }
 
+        .popup-icbc-wrapper {
+            max-width: 400px;
+            padding: 10px;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 14px;
+        }
+
+        .popup-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .popup-logo {
+            height: 32px;
+        }
+
+        .popup-title {
+            font-size: 18px;
+            margin: 0;
+        }
+
+        .popup-icbc {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .popup-icbc th {
+            text-align: left;
+            padding-right: 6px;
+            vertical-align: top;
+            font-weight: 600;
+        }
+
+        .popup-icbc td {
+            padding-bottom: 4px;
+        }
+
+        .popup-pastor-img, .popup-site-img {
+            max-width: 100px;
+            height: auto;
+            display: block;
+            margin-top: 4px;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 600px) {
+            .leaflet-popup-content {
+                width: 95% !important;
+            }
+
+            .popup-icbc-wrapper {
+                font-size: 13px;
+                max-width: 95vw;
+            }
+
+            .popup-title {
+                font-size: 16px;
+            }
+
+            .popup-logo {
+                height: 24px;
+            }
+
+            .popup-pastor-img, .popup-site-img {
+                max-width: 80px;
 
 
+        .css_ICBCSites_6 {
+            color: black;
+            font-size: 11pt;
+            font-family: 'MS Shell Dlg 2', sans-serif;
+            background-color: transparent;
+            border: none;
+            box-shadow: none;
+        }  
+
+        /* White text for satellite map */
+        .css_ICBCSites_6.white-label {
+            color: white !important;
+            text-shadow: 0 0 2px black; /* adds visibility on light areas */
+        }
         
         </style>
         <title>CMS ICBC Sites In Eswatini</title>
@@ -632,7 +711,7 @@
         rotationOrigin: 'center center',
         icon: L.icon({
             iconUrl: 'markers/flames.svg',
-            iconSize: [32, 32]
+            iconSize: [40, 40]
         }),
                 interactive: true,
             }
@@ -658,23 +737,29 @@
         bounds_group.addLayer(layer_ICBCSites_6);
         map.addLayer(layer_ICBCSites_6);
 
+        function updateICBCLabelColor(isWhite) {
+            layer_ICBCSites_6.eachLayer(function(layer) {
+                const tooltipEl = layer.getTooltip()?.getElement();
+                if (tooltipEl) {
+                    tooltipEl.classList.toggle('white-label', isWhite);
+                }
+            });
+        }
+
+
         var layer_HomeSites = new L.geoJson(json_HomeSites, {
             pointToLayer: function (feature, latlng) {
                 return L.marker(latlng, {
                     icon: L.icon({
                         iconUrl: 'markers/house-icon.svg',
-                        iconSize: [10, 10]
+                        iconSize: [25, 25]
                     })
                 });
             },
             onEachFeature: function (feature, layer) {
-                //var props = feature.properties;
-                //var popupContent = `<strong>${props["Site"] || "Unnamed Site"}</strong><br>
-                //                    Family Code: ${props["Family Code"] || "N/A"}<br>
-                //                   Contact No: ${props["Contact No"] || "N/A"}<br>
-                //                    Region: ${props["Region"] || "N/A"}<br>
-                //                    No. of Children: ${props["No of Children"] || "N/A"}`;
-                //layer.bindPopup(popupContent);
+                var props = feature.properties;
+                var popupContent = `<strong>Family Code:</strong> ${props["Family Code"] || "N/A"}`;
+                layer.bindPopup(popupContent);
             }
         });
         map.addLayer(layer_HomeSites);
@@ -686,18 +771,29 @@
         };
         title.addTo(map);
 
-        var baseMaps = {};
-        var baseMaps = {};
+        var baseMaps = {
+            "Open Street Map": layer_OpenStreetMap_0,
+            "Google Sat Hybrid": layer_GoogleSatHybrid_1
+        };
+
+        map.on('baselayerchange', function(e) {
+            if (e.name === 'Google Sat Hybrid') {
+                updateICBCLabelColor(true);  // Switch to white labels
+            } else {
+                updateICBCLabelColor(false); // Switch back to black
+            }
+        });
 
         var overlays = {
             '<img src="legend/ICBCSites_6.png" /> ICBC Sites': layer_ICBCSites_6,
+            '<img src="markers/house-icon.svg" height="14"/> Bubele Care': layer_HomeSites,
             '<img src="legend/CMS_5.png" /> CMS': layer_CMS_5,
             '<img src="legend/Roads_4.png" /> Roads': layer_Roads_4,
             '<img src="legend/7kmCatchmentArea_3.png" /> 7km Catchment Area': layer_7kmCatchmentArea_3,
             'Eswatini Regions<br /><table><tr><td style="text-align: center;"><img src="legend/eSwatiniRegions_2_Hhohho0.png" /></td><td>Hhohho</td></tr><tr><td style="text-align: center;"><img src="legend/eSwatiniRegions_2_Lubombo1.png" /></td><td>Lubombo</td></tr><tr><td style="text-align: center;"><img src="legend/eSwatiniRegions_2_Manzini2.png" /></td><td>Manzini</td></tr><tr><td style="text-align: center;"><img src="legend/eSwatiniRegions_2_Shiselweni3.png" /></td><td>Shiselweni</td></tr></table>': layer_eSwatiniRegions_2,
             "Google Sat Hybrid": layer_GoogleSatHybrid_1,
             "Open Street Map": layer_OpenStreetMap_0,
-            '<img src="markers/house-icon.svg" height="14"/> Bubele Care': layer_HomeSites
+            
         };
 
         var legendControl = L.control.layers(baseMaps, overlays, { collapsed: false });
@@ -709,7 +805,7 @@
 
             if (overlayContainer) {
                 const overlayHeader = document.createElement('div');
-                overlayHeader.textContent = 'Legend';
+                overlayHeader.textContent = '';
                 overlayHeader.className = 'legend-subheader';
                 overlayContainer.insertBefore(overlayHeader, overlayContainer.firstChild);
             }
