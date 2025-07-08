@@ -151,13 +151,19 @@
     
         }
 
+        /* Main popup container */
         .popup-icbc-wrapper {
-            max-width: 400px;
-            padding: 10px;
+            width: 100%;
+            max-width: 600px;
+            padding: 12px;
             font-family: 'Segoe UI', sans-serif;
             font-size: 14px;
+            box-sizing: border-box;
+            color: #333;
+            line-height: 1.5;
         }
 
+        /* Popup header section */
         .popup-header {
             display: flex;
             align-items: center;
@@ -166,14 +172,17 @@
         }
 
         .popup-logo {
-            height: 32px;
+            height: 36px;
+            flex-shrink: 0;
         }
 
         .popup-title {
-            font-size: 18px;
+            font-size: 20px;
             margin: 0;
+            font-weight: 600;
         }
 
+        /* Table styling */
         .popup-icbc {
             width: 100%;
             border-collapse: collapse;
@@ -181,58 +190,74 @@
 
         .popup-icbc th {
             text-align: left;
-            padding-right: 6px;
+            padding-right: 8px;
             vertical-align: top;
             font-weight: 600;
+            color: #555;
+            white-space: nowrap;
         }
 
         .popup-icbc td {
-            padding-bottom: 4px;
+            padding-bottom: 6px;
+            color: #222;
         }
 
-        .popup-pastor-img, .popup-site-img {
-            max-width: 100px;
+        /* Responsive images */
+        .popup-pastor-img,
+        .popup-site-img {
+            max-width: 100%;
             height: auto;
             display: block;
             margin-top: 4px;
+            border-radius: 4px;
         }
 
-        /* Base popup size control */
+        /* Leaflet popup container */
         .leaflet-popup-content {
             width: auto !important;
-            max-width: 300px;
-            padding: 6px !important;
-            margin: 0;
-            overflow-wrap: break-word;
+            max-width: 500px;
+            min-width: 360px;
+            padding: 8px !important;
+            overflow-x: hidden !important;
+            overflow-y: auto !important;
+            box-sizing: border-box;
+            font-size: 14px;
         }
 
+        /* Popup container wrapper fix for Edge */
+        .leaflet-popup-content-wrapper {
+            overflow-x: hidden !important;
+            overflow-y: visible !important;
+            max-width: 100vw;
+        }
 
-
-
-        /* Mobile responsiveness */
+        /* 📱 Mobile layout adjustments */
         @media (max-width: 600px) {
             .leaflet-popup-content {
-                width: 80vw !important;
-                font-size: 12px;
+                max-width: 90vw !important;
+                min-width: auto;
+                font-size: 13px;
             }
 
             .popup-icbc-wrapper {
+                padding: 8px;
                 font-size: 13px;
-                max-width: 100%;
-                padding:6px
             }
 
             .popup-title {
-                font-size: 14px;
+                font-size: 16px;
             }
 
             .popup-logo {
-                height: 24px;
+                height: 26px;
             }
 
-            .popup-pastor-img, .popup-site-img {
-                max-width: 80px; height:auto;
+            .popup-pastor-img,
+            .popup-site-img {
+                max-width: 80px;
+            }
 
+            .popup-icbc th,
             .popup-icbc td {
                 font-size: 13px;
             }
