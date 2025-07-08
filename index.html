@@ -260,6 +260,15 @@
             .popup-icbc th,
             .popup-icbc td {
                 font-size: 13px;
+                word-wrap: break-word;
+                word-break: break-word;
+                white-space: normal;  /* ✅ Allow text to wrap */
+                max-width: 100%;      /* ✅ Prevent overflow */
+            }
+
+            .popup-icbc {
+                table-layout: auto;
+                width: 100%;
             }
 
 
