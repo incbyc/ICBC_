@@ -7,302 +7,541 @@
         <meta name="mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <link rel="stylesheet" href="css/leaflet.css">
-        <link rel="stylesheet" href="css/qgis2web.css"><link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <link rel="stylesheet" href="css/qgis2web.css">
+        <link rel="stylesheet" href="css/fontawesome-all.min.css">
         <link rel="stylesheet" href="css/leaflet-measure.css">
         
         <style>
+        * {
+            box-sizing: border-box;
+        }
+
         html, body, #map {
             width: 100%;
             height: 100%;
             padding: 0;
             margin: 0;
+            font-family: Roboto, Arial, sans-serif;
         }
 
+        /* ===== LAYER CONTROL - Google Maps Style ===== */
         .leaflet-control-layers {
-            font-family: 'Segoe UI', sans-serif;
-            font-size: 15px;
-            background-color: #f9f9f9;
-            padding: 10px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            width: 260px; /* Match width with the title */
+            font-family: Roboto, Arial, sans-serif;
+            font-size: 13px;
+            background-color: #ffffff;
+            padding: 12px 0;
+            border-radius: 2px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            width: 280px;
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
+            border: none;
+        }
+
+        .leaflet-control-layers-base,
+        .leaflet-control-layers-overlays {
+            padding: 0 16px;
         }
 
         .leaflet-control-layers label {
-            margin-bottom: 6px;
-            display: block;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            padding: 8px 4px;
+            border-radius: 0;
+            transition: background-color 0.2s;
+            cursor: pointer;
+            font-weight: 400;
         }
 
-        .leaflet-control-layers .leaflet-control-layers-list,
-        .leaflet-control-layers label {
-            font-size: 14px;
-            padding: 4px 6px;
+        .leaflet-control-layers label:hover {
+            background-color: #f5f5f5;
         }
 
+        .leaflet-control-layers input[type="radio"],
+        .leaflet-control-layers input[type="checkbox"] {
+            margin-right: 12px;
+            cursor: pointer;
+            accent-color: #1a73e8;
+        }
+
+        .leaflet-control-layers-separator {
+            margin: 8px 0;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        /* ===== TITLE CONTROL - Google Maps Style ===== */
         .info.leaflet-control {
-            background-color: white;
-            padding: 10px;
-            border-radius: 8px;
+            background: #ffffff;
+            padding: 16px 20px;
+            border-radius: 2px;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
             display: flex;
             align-items: center;
-            font-family: 'Segoe UI', sans-serif;
+            gap: 12px;
+            font-family: Roboto, Arial, sans-serif;
+            width: 280px;
+            border: none;
         }
 
         .info.leaflet-control img {
-            height: 32px;
-            margin-right: 10px;
-        }
-
-        .info.leaflet-control h2 {
-            font-size: 20px;
-            margin: 0;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .leaflet-control-layers-overlays img {
-            vertical-align: middle;
-            margin-right: 4px;
-        }
-
-        .info.leaflet-control {
-            background-color: white;
-            padding: 10px;
-            border-radius: 8px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-            font-family: 'Segoe UI', sans-serif;
-            text-align: center;
-            width: 260px; /* Set consistent width for title and legend */
-        }
-
-        .info.leaflet-control img {
-            height: 85px; /* Bigger logo */
-            display: block;
-            margin: 0 auto 10px auto;
+            height: 40px;
         }
 
         .info.leaflet-control h1 {
-            font-size: 20px;
+            font-size: 18px;
             margin: 0;
-            font-weight: 600;
-            color: #333;
+            font-weight: 500;
+            color: #202124;
+            letter-spacing: 0;
         }
 
-        .legend-container {
-            position: relative;
-            width: 260px;
-            z-index: 1000;
-        }
-
+        /* ===== MOBILE LEGEND TOGGLE - Google Maps Style ===== */
         .legend-toggle {
             display: none;
-            position: fixed; /* Change from absolute to fixed */
-            top: 10px;
+            position: fixed;
+            top: 90px;
             right: 10px;
-            background-color: white;
-            border: 1px solid #aaa;
-            padding: 6px 12px;
-            font-size: 14px;
-            border-radius: 4px;
-            z-index: 1001; /* Higher than leaflet controls */
+            background-color: #ffffff;
+            border: none;
+            padding: 10px 14px;
+            font-size: 16px;
+            font-weight: 500;
+            border-radius: 2px;
+            z-index: 1001;
             cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-        @media (max-width: 768px) {
-            .leaflet-control-layers {
-                display: none;
-                width: 260px !important;        /* same as your .info.leaflet-control */
-                max-height: none    !important; /* let it grow only as tall as you allow */
-                overflow-y: auto    !important; /* scroll if there are too many items */
-            }
-            .leaflet-control-layers.show {
-                display: block !important;
-            }
-            .legend-toggle {
-                display: block !important;
-                top: 90px; /* 👈 Move it below the title */
-                right: 10px;
-            }
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            transition: background-color 0.2s;
+            color: #5f6368;
         }
 
-        .leaflet-control-layers-overlays .legend-subheader {
-            font-weight: 200;
+        .legend-toggle:hover {
+            background-color: #f8f9fa;
+        }
+
+        .legend-toggle:active {
+            background-color: #e8eaed;
+        }
+
+        /* ===== GOOGLE MAPS STYLE POPUP ===== */
+        .leaflet-popup-content-wrapper {
+            border-radius: 8px;
+            padding: 0;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid #e0e0e0;
+        }
+
+        .leaflet-popup-content {
+            margin: 0 !important;
+            width: auto !important;
+            max-width: 600px;
+            min-width: 420px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .leaflet-popup-tip {
+            box-shadow: 0 3px 14px rgba(0,0,0,0.15);
+        }
+
+        /* ===== ICBC POPUP - Google Maps Inspired ===== */
+        .popup-icbc-wrapper {
+            width: 100%;
+            padding: 0;
+            background: #ffffff;
+        }
+
+        .popup-header {
+            background: #ffffff;
+            padding: 20px 24px 16px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border-bottom: 1px solid #e8eaed;
+        }
+
+        .popup-logo {
+            height: 32px;
+            flex-shrink: 0;
+        }
+
+        .popup-title {
+            font-size: 22px;
+            margin: 0;
+            font-weight: 400;
+            color: #202124;
+        }
+
+        .popup-body {
+            padding: 20px 24px;
+            max-height: 450px;
+            overflow-y: auto;
+        }
+
+        .popup-section {
+            margin-bottom: 24px;
+        }
+
+        .popup-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .popup-section-title {
+            font-size: 11px;
+            font-weight: 500;
+            text-transform: uppercase;
+            color: #5f6368;
+            margin-bottom: 12px;
+            letter-spacing: 0.8px;
+        }
+
+        .popup-info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .popup-info-grid.single-column {
+            grid-template-columns: 1fr;
+        }
+
+        .popup-info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .popup-info-item.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .popup-info-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: #5f6368;
+            margin-bottom: 2px;
+        }
+
+        .popup-info-value {
+            font-size: 14px;
+            color: #202124;
+            font-weight: 400;
+        }
+
+        .popup-pastor-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .popup-pastor-img-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #ffffff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            flex-shrink: 0;
+        }
+
+        .popup-pastor-info {
+            flex: 1;
+        }
+
+        .popup-pastor-name {
             font-size: 16px;
+            font-weight: 500;
+            color: #202124;
             margin-bottom: 4px;
         }
 
-        @media (max-width: 600px) {
+        .popup-pastor-title {
+            font-size: 13px;
+            color: #5f6368;
+        }
+
+        .popup-image-container {
+            margin-top: 8px;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #f8f9fa;
+            border: 1px solid #e8eaed;
+        }
+
+        .popup-image {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .popup-link {
+            display: inline-flex;
+            align-items: center;
+            color: #1a73e8;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+            font-size: 14px;
+        }
+
+        .popup-link:hover {
+            color: #1557b0;
+            text-decoration: underline;
+        }
+
+        /* ===== CMS POPUP ===== */
+        .popup-cms-wrapper {
+            background: #ffffff;
+        }
+
+        .popup-cms-header {
+            background: #ffffff;
+            padding: 20px 24px 16px 24px;
+            border-bottom: 1px solid #e8eaed;
+        }
+
+        .popup-cms-title {
+            font-size: 22px;
+            margin: 0;
+            font-weight: 400;
+            color: #202124;
+        }
+
+        .popup-cms-body {
+            padding: 20px 24px;
+        }
+
+        .popup-cms-about {
+            font-size: 14px;
+            color: #202124;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        /* ===== LABEL STYLING - Clean & Minimalist ===== */
+        .css_ICBCSites_6,
+        .css_CMS_5,
+        .css_Roads_4 {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            font-weight: 500 !important;
+            font-size: 12px !important;
+            color: #202124 !important;
+            text-shadow: 
+                -1px -1px 0 #fff,  
+                1px -1px 0 #fff,
+                -1px 1px 0 #fff,
+                1px 1px 0 #fff,
+                0 0 3px #fff,
+                0 0 5px #fff !important;
+            pointer-events: none;
+        }
+
+        .css_ICBCSites_6.white-label {
+            color: #ffffff !important;
+            text-shadow: 
+                -1px -1px 0 #000,  
+                1px -1px 0 #000,
+                -1px 1px 0 #000,
+                1px 1px 0 #000,
+                0 0 3px #000,
+                0 0 5px #000 !important;
+        }
+
+        .css_Roads_4 {
+            font-size: 10px !important;
+            color: #5f6368 !important;
+        }
+
+        /* ===== RESPONSIVE DESIGN ===== */
+        @media (max-width: 768px) {
+            .leaflet-control-layers {
+                display: none;
+                position: fixed;
+                top: 80px;
+                right: 10px;
+                left: 10px;
+                width: auto;
+                max-width: none;
+                max-height: calc(100vh - 100px);
+                z-index: 1002;
+            }
+            
+            .leaflet-control-layers.show {
+                display: block !important;
+            }
+            
+            .legend-toggle {
+                display: block !important;
+            }
+
             .info.leaflet-control {
-                width: 90%;
-                font-size: 14px;
-                margin: 0 auto;
-                padding: 6px;
+                width: calc(100% - 20px);
+                margin: 10px;
+                padding: 12px 16px;
             }
 
             .info.leaflet-control img {
-                height: 60px;
+                height: 32px;
             }
 
             .info.leaflet-control h1 {
                 font-size: 16px;
             }
 
-    
-        }
-
-        /* Main popup container */
-        .popup-icbc-wrapper {
-            width: 100%;
-            max-width: 600px;
-            padding: 12px;
-            font-family: 'Segoe UI', sans-serif;
-            font-size: 14px;
-            box-sizing: border-box;
-            color: #333;
-            line-height: 1.5;
-        }
-
-        /* Popup header section */
-        .popup-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-
-        .popup-logo {
-            height: 36px;
-            flex-shrink: 0;
-        }
-
-        .popup-title {
-            font-size: 20px;
-            margin: 0;
-            font-weight: 600;
-        }
-
-        /* Table styling */
-        .popup-icbc {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .popup-icbc th {
-            text-align: left;
-            padding-right: 8px;
-            vertical-align: top;
-            font-weight: 600;
-            color: #555;
-            white-space: nowrap;
-        }
-
-        .popup-icbc td {
-            padding-bottom: 6px;
-            color: #222;
-        }
-
-        /* Responsive images */
-        .popup-pastor-img,
-        .popup-site-img {
-            max-width: 100%;
-            height: auto;
-            display: block;
-            margin-top: 4px;
-            border-radius: 4px;
-        }
-
-        /* Leaflet popup container */
-        .leaflet-popup-content {
-            width: auto !important;
-            max-width: 500px;
-            min-width: 360px;
-            padding: 8px !important;
-            overflow-x: hidden !important;
-            overflow-y: auto !important;
-            box-sizing: border-box;
-            font-size: 14px;
-        }
-
-        /* Popup container wrapper fix for Edge */
-        .leaflet-popup-content-wrapper {
-            overflow-x: hidden !important;
-            overflow-y: visible !important;
-            max-width: 100vw;
-        }
-
-        /* 📱 Mobile layout adjustments */
-        @media (max-width: 600px) {
             .leaflet-popup-content {
-                max-width: 80vw !important;
-                min-width: auto;
-                height: auto;
-                font-size: 13px;
+                min-width: 280px;
+                max-width: calc(100vw - 40px);
             }
 
-            .popup-icbc-wrapper {
-                padding: 8px;
-                font-size: 13px;
-                overflow-x: auto;
+            .popup-header,
+            .popup-cms-header {
+                padding: 16px;
             }
 
-            .popup-title {
-                font-size: 14px;
+            .popup-title,
+            .popup-cms-title {
+                font-size: 18px;
             }
 
             .popup-logo {
-                height: 26px;
+                height: 28px;
             }
 
-            .popup-pastor-img,
-            .popup-site-img {
-                max-width: 80px;
+            .popup-body,
+            .popup-cms-body {
+                padding: 16px;
+                max-height: 350px;
             }
 
-            .popup-icbc th,
-            .popup-icbc td {
-                font-size: 10px;
-                padding-right: 8px;
-                padding-bottom: 6px;
-                vertical-align: top;
+            .popup-info-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
             }
 
-            /* Scrollable table on small screens */
-            .popup-icbc {
-                display: block;                /* forces it to act like a block for scroll */
-                overflow-x: auto;              /* ✅ horizontal scroll only */
-               
-                width: 100%;
-                max-width: 100%;
+            .popup-pastor-wrapper {
+                flex-direction: column;
+                text-align: center;
+                padding: 12px;
             }
 
-            
-
-            
-            
-
-
-        .css_ICBCSites_6 {
-            color: black;
-            font-size: 11pt;
-            font-family: 'MS Shell Dlg 2', sans-serif;
-            background-color: transparent;
-            border: none;
-            box-shadow: none;
-        }  
-
-        /* White text for satellite map */
-        .css_ICBCSites_6.white-label {
-            color: white !important;
-            text-shadow: 0 0 2px black; /* adds visibility on light areas */
+            .popup-pastor-img-circle {
+                width: 60px;
+                height: 60px;
+            }
         }
-        
+
+        @media (max-width: 480px) {
+            .info.leaflet-control {
+                padding: 10px 12px;
+            }
+
+            .info.leaflet-control img {
+                height: 28px;
+            }
+
+            .info.leaflet-control h1 {
+                font-size: 14px;
+            }
+
+            .popup-header,
+            .popup-cms-header {
+                padding: 12px;
+            }
+
+            .popup-title,
+            .popup-cms-title {
+                font-size: 16px;
+            }
+
+            .popup-logo {
+                height: 24px;
+            }
+
+            .popup-body,
+            .popup-cms-body {
+                padding: 12px;
+                max-height: 300px;
+            }
+
+            .popup-section {
+                margin-bottom: 16px;
+            }
+
+            .popup-pastor-img-circle {
+                width: 50px;
+                height: 50px;
+            }
+
+            .css_ICBCSites_6,
+            .css_CMS_5 {
+                font-size: 11px !important;
+            }
+
+            .leaflet-popup-content {
+                min-width: 260px;
+            }
+        }
+
+        /* Tablet specific - wider popups */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .leaflet-popup-content {
+                min-width: 500px;
+                max-width: 550px;
+            }
+        }
+
+        /* Desktop - widest popups */
+        @media (min-width: 1025px) {
+            .leaflet-popup-content {
+                min-width: 550px;
+                max-width: 600px;
+            }
+        }
+
+        /* Custom scrollbar - Google style */
+        .popup-body::-webkit-scrollbar,
+        .leaflet-control-layers::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .popup-body::-webkit-scrollbar-track,
+        .leaflet-control-layers::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .popup-body::-webkit-scrollbar-thumb,
+        .leaflet-control-layers::-webkit-scrollbar-thumb {
+            background: #dadce0;
+            border-radius: 4px;
+        }
+
+        .popup-body::-webkit-scrollbar-thumb:hover,
+        .leaflet-control-layers::-webkit-scrollbar-thumb:hover {
+            background: #bdc1c6;
+        }
+
+        .leaflet-top.leaflet-left {
+            top: 10px;
+            left: 10px;
+        }
+
+        .leaflet-top.leaflet-right {
+            top: 10px;
+            right: 10px;
+        }
         </style>
         <title>CMS ICBC Sites In Eswatini</title>
     </head>
     <body>
         <div id="map">
-            <button id="legendToggle" class="legend-toggle">☰</button>
+            <button id="legendToggle" class="legend-toggle">☰ Layers</button>
         </div>
         <script src="js/qgis2web_expressions.js"></script>
         <script src="js/leaflet.js"></script>
@@ -322,30 +561,32 @@
         <script src="data/ICBCSites_6.js"></script>
         <script src="data/HomeSites.js"></script>
         <script>
-
-            
         var highlightLayer;
         function highlightFeature(e) {
             highlightLayer = e.target;
-
             if (e.target.feature.geometry.type === 'LineString') {
-              highlightLayer.setStyle({
-                color: '#ffff00',
-              });
+                highlightLayer.setStyle({
+                    color: '#ffff00',
+                });
             } else {
-              highlightLayer.setStyle({
-                fillColor: '#ffff00',
-                fillOpacity: 1
-              });
+                highlightLayer.setStyle({
+                    fillColor: '#ffff00',
+                    fillOpacity: 1
+                });
             }
         }
+
         var map = L.map('map', {
-            zoomControl:true, maxZoom:20, minZoom:3
+            zoomControl: true,
+            maxZoom: 20,
+            minZoom: 3
         }).fitBounds([[-27.192638650332352,30.073272356187825],[-25.76025459999724,32.57482685070581]]);
+
         var hash = new L.Hash(map);
         map.attributionControl.setPrefix('© 2025 ICBC Eswatini Map Viewer');
 
         var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        
         var measureControl = new L.Control.Measure({
             position: 'topleft',
             primaryLengthUnit: 'meters',
@@ -354,13 +595,11 @@
             secondaryAreaUnit: 'hectares'
         });
         measureControl.addTo(map);
-        document.getElementsByClassName('leaflet-control-measure-toggle')[0]
-        .innerHTML = '';
-        document.getElementsByClassName('leaflet-control-measure-toggle')[0]
-        .className += ' fas fa-ruler';
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0].innerHTML = '';
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0].className += ' fas fa-ruler';
+
         var bounds_group = new L.featureGroup([]);
-        function setBounds() {
-        }
+
         map.createPane('pane_OpenStreetMap_0');
         map.getPane('pane_OpenStreetMap_0').style.zIndex = 400;
         var layer_OpenStreetMap_0 = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -368,12 +607,11 @@
             opacity: 1.0,
             attribution: '',
             minZoom: 3,
-            maxZoom: 20,
-            minNativeZoom: 0,
-            maxNativeZoom: 18
+            maxZoom: 20
         });
         layer_OpenStreetMap_0;
         map.addLayer(layer_OpenStreetMap_0);
+
         map.createPane('pane_GoogleSatHybrid_1');
         map.getPane('pane_GoogleSatHybrid_1').style.zIndex = 401;
         var layer_GoogleSatHybrid_1 = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
@@ -381,11 +619,10 @@
             opacity: 1.0,
             attribution: '',
             minZoom: 3,
-            maxZoom: 20,
-            minNativeZoom: 0,
-            maxNativeZoom: 18
+            maxZoom: 20
         });
         layer_GoogleSatHybrid_1;
+
         function pop_eSwatiniRegions_2(feature, layer) {
             layer.on({
                 mouseout: function(e) {
@@ -398,72 +635,29 @@
         }
 
         function style_eSwatiniRegions_2_0(feature) {
-            switch(String(feature.properties['q2wHide_ADM1_EN'])) {
-                case 'Hhohho':
-                    return {
+            var colors = {
+                'Hhohho': 'rgba(255,255,212,1.0)',
+                'Lubombo': 'rgba(254,217,142,1.0)',
+                'Manzini': 'rgba(254,153,41,1.0)',
+                'Shiselweni': 'rgba(217,95,14,1.0)'
+            };
+            return {
                 pane: 'pane_eSwatiniRegions_2',
                 opacity: 1,
                 color: 'rgba(35,35,35,1.0)',
                 dashArray: '',
                 lineCap: 'butt',
                 lineJoin: 'miter',
-                weight: 1.0, 
+                weight: 1.0,
                 fill: true,
                 fillOpacity: 0.7,
-                fillColor: 'rgba(255,255,212,1.0)',
+                fillColor: colors[feature.properties['q2wHide_ADM1_EN']] || 'rgba(255,255,255,1.0)',
                 interactive: false,
-            }
-                    break;
-                case 'Lubombo':
-                    return {
-                pane: 'pane_eSwatiniRegions_2',
-                opacity: 1,
-                color: 'rgba(35,35,35,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 1.0, 
-                fill: true,
-                fillOpacity: 0.7,
-                fillColor: 'rgba(254,217,142,1.0)',
-                interactive: false,
-            }
-                    break;
-                case 'Manzini':
-                    return {
-                pane: 'pane_eSwatiniRegions_2',
-                opacity: 1,
-                color: 'rgba(35,35,35,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 1.0, 
-                fill: true,
-                fillOpacity: 0.7,
-                fillColor: 'rgba(254,153,41,1.0)',
-                interactive: false,
-            }
-                    break;
-                case 'Shiselweni':
-                    return {
-                pane: 'pane_eSwatiniRegions_2',
-                opacity: 1,
-                color: 'rgba(35,35,35,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 1.0, 
-                fill: true,
-                fillOpacity: 0.7,
-                fillColor: 'rgba(217,95,14,1.0)',
-                interactive: false,
-            }
-                    break;
-            }
+            };
         }
+
         map.createPane('pane_eSwatiniRegions_2');
         map.getPane('pane_eSwatiniRegions_2').style.zIndex = 402;
-        map.getPane('pane_eSwatiniRegions_2').style['mix-blend-mode'] = 'normal';
         var layer_eSwatiniRegions_2 = new L.geoJson(json_eSwatiniRegions_2, {
             attribution: '',
             interactive: false,
@@ -475,6 +669,7 @@
         });
         bounds_group.addLayer(layer_eSwatiniRegions_2);
         map.addLayer(layer_eSwatiniRegions_2);
+
         function pop_7kmCatchmentArea_3(feature, layer) {
             layer.on({
                 mouseout: function(e) {
@@ -484,75 +679,31 @@
                 },
                 mouseover: highlightFeature,
             });
-            var popupContent = '<table>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['ID'] !== null ? autolinker.link(feature.properties['ID'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['Site Name'] !== null ? autolinker.link(feature.properties['Site Name'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['Pastor Nam'] !== null ? autolinker.link(feature.properties['Pastor Nam'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['Contact No'] !== null ? autolinker.link(feature.properties['Contact No'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['Year Est.'] !== null ? autolinker.link(feature.properties['Year Est.'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['Region'] !== null ? autolinker.link(feature.properties['Region'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['Latitude'] !== null ? autolinker.link(feature.properties['Latitude'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['Longitude'] !== null ? autolinker.link(feature.properties['Longitude'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['Main Water'] !== null ? autolinker.link(feature.properties['Main Water'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['Current S'] !== null ? autolinker.link(feature.properties['Current S'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['PreSchool'] !== null ? autolinker.link(feature.properties['PreSchool'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['Area Descr'] !== null ? autolinker.link(feature.properties['Area Descr'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                </table>';
-            layer.bindPopup(popupContent, {maxHeight: 400});
         }
 
-        function style_7kmCatchmentArea_3_0() {
-            return {
+        map.createPane('pane_7kmCatchmentArea_3');
+        map.getPane('pane_7kmCatchmentArea_3').style.zIndex = 403;
+        var layer_7kmCatchmentArea_3 = new L.geoJson(json_7kmCatchmentArea_3, {
+            attribution: '',
+            interactive: false,
+            pane: 'pane_7kmCatchmentArea_3',
+            onEachFeature: pop_7kmCatchmentArea_3,
+            style: {
                 pane: 'pane_7kmCatchmentArea_3',
                 opacity: 1,
                 color: 'rgba(35,35,35,1.0)',
                 dashArray: '',
                 lineCap: 'butt',
                 lineJoin: 'miter',
-                weight: 1.0, 
+                weight: 1.0,
                 fill: true,
                 fillOpacity: 0.3,
                 fillColor: 'rgba(233,120,86,1.0)',
                 interactive: false,
             }
-        }
-        map.createPane('pane_7kmCatchmentArea_3');
-        map.getPane('pane_7kmCatchmentArea_3').style.zIndex = 403;
-        map.getPane('pane_7kmCatchmentArea_3').style['mix-blend-mode'] = 'normal';
-        var layer_7kmCatchmentArea_3 = new L.geoJson(json_7kmCatchmentArea_3, {
-            attribution: '',
-            interactive: false,
-            dataVar: 'json_7kmCatchmentArea_3',
-            layerName: 'layer_7kmCatchmentArea_3',
-            pane: 'pane_7kmCatchmentArea_3',
-            onEachFeature: pop_7kmCatchmentArea_3,
-            style: style_7kmCatchmentArea_3_0,
         });
         bounds_group.addLayer(layer_7kmCatchmentArea_3);
+
         function pop_Roads_4(feature, layer) {
             layer.on({
                 mouseout: function(e) {
@@ -562,64 +713,16 @@
                 },
                 mouseover: highlightFeature,
             });
-            var popupContent = '<table>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['LINKNO'] !== null ? autolinker.link(feature.properties['LINKNO'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['ROADNO'] !== null ? autolinker.link(feature.properties['ROADNO'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['STARTKM'] !== null ? autolinker.link(feature.properties['STARTKM'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['ENDKM'] !== null ? autolinker.link(feature.properties['ENDKM'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['LENGTHKM'] !== null ? autolinker.link(feature.properties['LENGTHKM'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['STARTDESC'] !== null ? autolinker.link(feature.properties['STARTDESC'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['ENDDESC'] !== null ? autolinker.link(feature.properties['ENDDESC'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['CLASS'] !== null ? autolinker.link(feature.properties['CLASS'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['REGION'] !== null ? autolinker.link(feature.properties['REGION'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['WIDTH'] !== null ? autolinker.link(feature.properties['WIDTH'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['LANES'] !== null ? autolinker.link(feature.properties['LANES'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['SURFTYPE'] !== null ? autolinker.link(feature.properties['SURFTYPE'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['CONDITION'] !== null ? autolinker.link(feature.properties['CONDITION'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['AADT'] !== null ? autolinker.link(feature.properties['AADT'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['PAVEMTYPE'] !== null ? autolinker.link(feature.properties['PAVEMTYPE'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['COMMENT'] !== null ? autolinker.link(feature.properties['COMMENT'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['AICD_REG'] !== null ? autolinker.link(feature.properties['AICD_REG'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                </table>';
-            layer.bindPopup(popupContent, {maxHeight: 400});
         }
 
-        function style_Roads_4_0() {
-            return {
+        map.createPane('pane_Roads_4');
+        map.getPane('pane_Roads_4').style.zIndex = 404;
+        var layer_Roads_4 = new L.geoJson(json_Roads_4, {
+            attribution: '',
+            interactive: false,
+            pane: 'pane_Roads_4',
+            onEachFeature: pop_Roads_4,
+            style: {
                 pane: 'pane_Roads_4',
                 opacity: 1,
                 color: 'rgba(118,118,118,1.0)',
@@ -630,20 +733,9 @@
                 fillOpacity: 0,
                 interactive: false,
             }
-        }
-        map.createPane('pane_Roads_4');
-        map.getPane('pane_Roads_4').style.zIndex = 404;
-        map.getPane('pane_Roads_4').style['mix-blend-mode'] = 'normal';
-        var layer_Roads_4 = new L.geoJson(json_Roads_4, {
-            attribution: '',
-            interactive: false,
-            dataVar: 'json_Roads_4',
-            layerName: 'layer_Roads_4',
-            pane: 'pane_Roads_4',
-            onEachFeature: pop_Roads_4,
-            style: style_Roads_4_0,
         });
         bounds_group.addLayer(layer_Roads_4);
+
         function pop_CMS_5(feature, layer) {
             layer.on({
                 mouseout: function(e) {
@@ -653,81 +745,69 @@
                 },
                 mouseover: highlightFeature,
             });
-            var popupContent = '<table>\
-                <tr>\
-                        <th scope="row">•Site Name</th>\
-                        <td>' + (feature.properties['Site Name'] !== null ? autolinker.link(feature.properties['Site Name'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <th scope="row">•About</th>\
-                        <td>' + (feature.properties['About'] !== null ? autolinker.link(feature.properties['About'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                    <th scope="row">•Photo</th>\
-                        <td>' + (feature.properties['Photo'] !== null ? '<img src="images/' + String(feature.properties['Photo']).replace(/[\\\/:]/g, '_').trim() + '">' : '') + '</td>\
-                    </tr>\
-                </table>';
-            layer.bindPopup(popupContent, {maxHeight: 660, maxWidth: 400});
+            
+            var popupContent = `
+                <div class="popup-cms-wrapper">
+                    <div class="popup-cms-header">
+                        <h2 class="popup-cms-title">${feature.properties['Site Name'] || 'CMS Site'}</h2>
+                    </div>
+                    <div class="popup-cms-body">
+                        ${feature.properties['About'] ? `<div class="popup-cms-about">${feature.properties['About']}</div>` : ''}
+                        ${feature.properties['Photo'] ? `
+                            <div class="popup-image-container">
+                                <img src="images/${String(feature.properties['Photo']).replace(/[\\\/:]/g, '_').trim()}" class="popup-image" alt="Site photo">
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>`;
+            layer.bindPopup(popupContent, {maxHeight: 500, maxWidth: 600});
         }
 
-        function style_CMS_5_0() {
-            return {
-                pane: 'pane_CMS_5',
-                radius: 6.4,
-                opacity: 1,
-                color: 'rgba(0,0,0,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 1.0,
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(255,255,255,1.0)',
-                interactive: true,
-            }
-        }
-        function style_CMS_5_1() {
-            return {
-                pane: 'pane_CMS_5',
-                radius: 1.4,
-                opacity: 1,
-                color: 'rgba(0,0,0,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 2.0,
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(0,0,0,1.0)',
-                interactive: true,
-            }
-        }
         map.createPane('pane_CMS_5');
         map.getPane('pane_CMS_5').style.zIndex = 405;
-        map.getPane('pane_CMS_5').style['mix-blend-mode'] = 'normal';
         var layer_CMS_5 = new L.geoJson.multiStyle(json_CMS_5, {
             attribution: '',
             interactive: true,
-            dataVar: 'json_CMS_5',
-            layerName: 'layer_CMS_5',
             pane: 'pane_CMS_5',
             onEachFeature: pop_CMS_5,
-            pointToLayers: [function (feature, latlng) {
-                var context = {
-                    feature: feature,
-                    variables: {}
-                };
-                return L.circleMarker(latlng, style_CMS_5_0(feature));
-            },function (feature, latlng) {
-                var context = {
-                    feature: feature,
-                    variables: {}
-                };
-                return L.circleMarker(latlng, style_CMS_5_1(feature));
-            },
-        ]});
+            pointToLayers: [
+                function (feature, latlng) {
+                    return L.circleMarker(latlng, {
+                        pane: 'pane_CMS_5',
+                        radius: 6.4,
+                        opacity: 1,
+                        color: 'rgba(0,0,0,1.0)',
+                        dashArray: '',
+                        lineCap: 'butt',
+                        lineJoin: 'miter',
+                        weight: 1.0,
+                        fill: true,
+                        fillOpacity: 1,
+                        fillColor: 'rgba(255,255,255,1.0)',
+                        interactive: true,
+                    });
+                },
+                function (feature, latlng) {
+                    return L.circleMarker(latlng, {
+                        pane: 'pane_CMS_5',
+                        radius: 1.4,
+                        opacity: 1,
+                        color: 'rgba(0,0,0,1.0)',
+                        dashArray: '',
+                        lineCap: 'butt',
+                        lineJoin: 'miter',
+                        weight: 2.0,
+                        fill: true,
+                        fillOpacity: 1,
+                        fillColor: 'rgba(0,0,0,1.0)',
+                        interactive: true,
+                    });
+                }
+            ]
+        });
         bounds_group.addLayer(layer_CMS_5);
         map.addLayer(layer_CMS_5);
+
         function pop_ICBCSites_6(feature, layer) {
             layer.on({
                 mouseout: function(e) {
@@ -737,63 +817,143 @@
                 },
                 mouseover: highlightFeature,
             });
+            
+            var props = feature.properties;
             var popupContent = `
                 <div class="popup-icbc-wrapper">
                     <div class="popup-header">
-                        <img src="markers/flames.svg" alt="logo" class="popup-logo">
-                        <h2 class="popup-title">${feature.properties['Site Name'] || ''}</h2>
+                        <img src="markers/flames.svg" alt="ICBC Logo" class="popup-logo">
+                        <h2 class="popup-title">${props['Site Name'] || 'ICBC Site'}</h2>
                     </div>
-                    <table class="popup-icbc">
-                        <tr>
-                            <th>Pastor's Photo</th>
-                            <td>${feature.properties['Pastors Photo'] ? '<img src="images/' + String(feature.properties['Pastors Photo']).replace(/[\\\/:]/g, '_').trim() + '" class="popup-pastor-img">' : ''}</td>
-                        </tr>
-                        <tr><th>Pastor</th><td>${feature.properties['Pastor'] || ''}</td></tr>
-                        <tr><th>Year Constructed</th><td>${feature.properties['Year Constructed'] || ''}</td></tr>
-                        <tr><th>Region</th><td>${feature.properties['Region'] || ''}</td></tr>
-                        <tr><th>Water Source</th><td>${feature.properties['Water Source'] || ''}</td></tr>
-                        <tr><th>Projects</th><td>${feature.properties['Projects'] || ''}</td></tr>
-                        <tr><th>PreSchool</th><td>${feature.properties['PreSchool'] || ''}</td></tr>
-                        <tr><th>About</th><td>${feature.properties['About'] || ''}</td></tr>
-                        <tr><th>Site Link</th><td>${feature.properties['Site Link'] || ''}</td></tr>
-                        <tr><th>Site Photo</th><td>${feature.properties['Photo'] ? '<img src="images/' + String(feature.properties['Photo']).replace(/[\\\/:]/g, '_').trim() + '" class="popup-site-img">' : ''}</td></tr>
-                        <tr><th>Ploughing Season</th><td>${feature.properties['Ploughing Season'] || ''}</td></tr>
-                        <tr><th>Hours Ploughed</th><td>${feature.properties['Hours Ploughed'] || ''}</td></tr>
-                        <tr><th>Families Ploughed for</th><td>${feature.properties['Families Ploughed for'] || ''}</td></tr>
-                        <tr><th>Area Ploughed</th><td>${feature.properties['Area Ploughed'] || ''}</td></tr>
-                    </table>
+                    <div class="popup-body">
+                        ${props['Pastor'] || props['Pastors Photo'] ? `
+                            <div class="popup-pastor-wrapper">
+                                ${props['Pastors Photo'] ? `
+                                    <img src="images/${String(props['Pastors Photo']).replace(/[\\\/:]/g, '_').trim()}" class="popup-pastor-img-circle" alt="Pastor photo">
+                                ` : ''}
+                                <div class="popup-pastor-info">
+                                    ${props['Pastor'] ? `
+                                        <div class="popup-pastor-name">${props['Pastor']}</div>
+                                        <div class="popup-pastor-title">Pastor</div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        ` : ''}
+                        
+                        <div class="popup-section">
+                            <div class="popup-section-title">Site Information</div>
+                            <div class="popup-info-grid">
+                                ${props['Year Constructed'] ? `
+                                    <div class="popup-info-item">
+                                        <div class="popup-info-label">Year Constructed</div>
+                                        <div class="popup-info-value">${props['Year Constructed']}</div>
+                                    </div>
+                                ` : ''}
+                                ${props['Region'] ? `
+                                    <div class="popup-info-item">
+                                        <div class="popup-info-label">Region</div>
+                                        <div class="popup-info-value">${props['Region']}</div>
+                                    </div>
+                                ` : ''}
+                                ${props['Water Source'] ? `
+                                    <div class="popup-info-item">
+                                        <div class="popup-info-label">Water Source</div>
+                                        <div class="popup-info-value">${props['Water Source']}</div>
+                                    </div>
+                                ` : ''}
+                                ${props['PreSchool'] ? `
+                                    <div class="popup-info-item">
+                                        <div class="popup-info-label">PreSchool</div>
+                                        <div class="popup-info-value">${props['PreSchool']}</div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+
+                        ${props['Projects'] || props['About'] ? `
+                            <div class="popup-section">
+                                <div class="popup-section-title">About</div>
+                                <div class="popup-info-grid single-column">
+                                    ${props['Projects'] ? `
+                                        <div class="popup-info-item">
+                                            <div class="popup-info-label">Projects</div>
+                                            <div class="popup-info-value">${props['Projects']}</div>
+                                        </div>
+                                    ` : ''}
+                                    ${props['About'] ? `
+                                        <div class="popup-info-item">
+                                            <div class="popup-info-value">${props['About']}</div>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        ${props['Ploughing Season'] || props['Hours Ploughed'] || props['Families Ploughed for'] || props['Area Ploughed'] ? `
+                            <div class="popup-section">
+                                <div class="popup-section-title">Ploughing Information</div>
+                                <div class="popup-info-grid">
+                                    ${props['Ploughing Season'] ? `
+                                        <div class="popup-info-item">
+                                            <div class="popup-info-label">Season</div>
+                                            <div class="popup-info-value">${props['Ploughing Season']}</div>
+                                        </div>
+                                    ` : ''}
+                                    ${props['Hours Ploughed'] ? `
+                                        <div class="popup-info-item">
+                                            <div class="popup-info-label">Hours Ploughed</div>
+                                            <div class="popup-info-value">${props['Hours Ploughed']}</div>
+                                        </div>
+                                    ` : ''}
+                                    ${props['Families Ploughed for'] ? `
+                                        <div class="popup-info-item">
+                                            <div class="popup-info-label">Families Ploughed</div>
+                                            <div class="popup-info-value">${props['Families Ploughed for']}</div>
+                                        </div>
+                                    ` : ''}
+                                    ${props['Area Ploughed'] ? `
+                                        <div class="popup-info-item">
+                                            <div class="popup-info-label">Area Ploughed</div>
+                                            <div class="popup-info-value">${props['Area Ploughed']}</div>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        ${props['Site Link'] ? `
+                            <div class="popup-section">
+                                <a href="${props['Site Link']}" target="_blank" class="popup-link">Visit Site →</a>
+                            </div>
+                        ` : ''}
+
+                        ${props['Photo'] ? `
+                            <div class="popup-section">
+                                <div class="popup-section-title">Site Photo</div>
+                                <div class="popup-image-container">
+                                    <img src="images/${String(props['Photo']).replace(/[\\\/:]/g, '_').trim()}" class="popup-image" alt="Site photo">
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
                 </div>`;
-            layer.bindPopup(popupContent, {maxHeight: 400, maxWidth: 400});
+            layer.bindPopup(popupContent, {maxHeight: 500, maxWidth: 600});
         }
 
-        function style_ICBCSites_6_0() {
-            return {
-                pane: 'pane_ICBCSites_6',
-        rotationAngle: 0.0,
-        rotationOrigin: 'center center',
-        icon: L.icon({
-            iconUrl: 'markers/flames.svg',
-            iconSize: [40, 40]
-        }),
-                interactive: true,
-            }
-        }
         map.createPane('pane_ICBCSites_6');
         map.getPane('pane_ICBCSites_6').style.zIndex = 406;
-        map.getPane('pane_ICBCSites_6').style['mix-blend-mode'] = 'normal';
         var layer_ICBCSites_6 = new L.geoJson(json_ICBCSites_6, {
             attribution: '',
             interactive: true,
-            dataVar: 'json_ICBCSites_6',
-            layerName: 'layer_ICBCSites_6',
             pane: 'pane_ICBCSites_6',
             onEachFeature: pop_ICBCSites_6,
             pointToLayer: function (feature, latlng) {
-                var context = {
-                    feature: feature,
-                    variables: {}
-                };
-                return L.marker(latlng, style_ICBCSites_6_0(feature));
+                return L.marker(latlng, {
+                    icon: L.icon({
+                        iconUrl: 'markers/flames.svg',
+                        iconSize: [40, 40]
+                    })
+                });
             },
         });
         bounds_group.addLayer(layer_ICBCSites_6);
@@ -808,7 +968,6 @@
             });
         }
 
-
         var layer_HomeSites = new L.geoJson(json_HomeSites, {
             pointToLayer: function (feature, latlng) {
                 return L.marker(latlng, {
@@ -820,11 +979,23 @@
             },
             onEachFeature: function (feature, layer) {
                 var props = feature.properties;
-                var popupContent = `<strong>Family Code:</strong> ${props["Family Code"] || "N/A"}`;
+                var popupContent = `
+                    <div class="popup-cms-wrapper">
+                        <div class="popup-cms-header">
+                            <h2 class="popup-cms-title">Bubele Care</h2>
+                        </div>
+                        <div class="popup-cms-body">
+                            <div class="popup-info-item">
+                                <div class="popup-info-label">Family Code</div>
+                                <div class="popup-info-value">${props["Family Code"] || "N/A"}</div>
+                            </div>
+                        </div>
+                    </div>`;
                 layer.bindPopup(popupContent);
             }
         });
         map.addLayer(layer_HomeSites);
+
         var title = new L.Control();
         title.onAdd = function (map) {
             var div = L.DomUtil.create('div', 'info leaflet-control');
@@ -840,9 +1011,9 @@
 
         map.on('baselayerchange', function(e) {
             if (e.name === 'Google Sat Hybrid') {
-                updateICBCLabelColor(true);  // Switch to white labels
+                updateICBCLabelColor(true);
             } else {
-                updateICBCLabelColor(false); // Switch back to black
+                updateICBCLabelColor(false);
             }
         });
 
@@ -853,93 +1024,84 @@
             '<img src="legend/Roads_4.png" /> Roads': layer_Roads_4,
             '<img src="legend/7kmCatchmentArea_3.png" /> 7km Catchment Area': layer_7kmCatchmentArea_3,
             'Eswatini Regions<br /><table><tr><td style="text-align: center;"><img src="legend/eSwatiniRegions_2_Hhohho0.png" /></td><td>Hhohho</td></tr><tr><td style="text-align: center;"><img src="legend/eSwatiniRegions_2_Lubombo1.png" /></td><td>Lubombo</td></tr><tr><td style="text-align: center;"><img src="legend/eSwatiniRegions_2_Manzini2.png" /></td><td>Manzini</td></tr><tr><td style="text-align: center;"><img src="legend/eSwatiniRegions_2_Shiselweni3.png" /></td><td>Shiselweni</td></tr></table>': layer_eSwatiniRegions_2,
-
-            
         };
 
         var legendControl = L.control.layers(baseMaps, overlays, { collapsed: false });
         legendControl.addTo(map);
 
-        setTimeout(() => {
-            const baseContainer = document.querySelector('.leaflet-control-layers-base');
-            const overlayContainer = document.querySelector('.leaflet-control-layers-overlays');
+        var legendToggleBtn = document.getElementById('legendToggle');
+        var layersControl = document.getElementsByClassName('leaflet-control-layers')[0];
+        
+        legendToggleBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            layersControl.classList.toggle('show');
+        });
 
-            if (overlayContainer) {
-                const overlayHeader = document.createElement('div');
-                overlayHeader.textContent = '';
-                overlayHeader.className = 'legend-subheader';
-                overlayContainer.insertBefore(overlayHeader, overlayContainer.firstChild);
+        map.on('click', function() {
+            if (window.innerWidth <= 768) {
+                if (layersControl.classList.contains('show')) {
+                    layersControl.classList.remove('show');
+                }
             }
-        }, 0);
+        });
 
+        if (layersControl) {
+            L.DomEvent.on(layersControl, 'click', function(e) {
+                L.DomEvent.stopPropagation(e);
+            });
+        }
 
+        layersControl.addEventListener('click', function(e) {
+            if (window.innerWidth <= 768 && (e.target.tagName === 'INPUT' || e.target.tagName === 'LABEL')) {
+                setTimeout(function() {
+                    layersControl.classList.remove('show');
+                }, 300);
+            }
+        });
 
-        setBounds();
         var i = 0;
         layer_Roads_4.eachLayer(function(layer) {
-            var context = {
-                feature: layer.feature,
-                variables: {}
-            };
-            layer.bindTooltip((layer.feature.properties['ROADNO'] !== null?String('<div style="color: #000000; font-size: 6pt; font-family: \'MS Shell Dlg 2\', sans-serif;">' + layer.feature.properties['ROADNO']) + '</div>':''), {permanent: true, offset: [-0, -16], className: 'css_Roads_4'});
+            layer.bindTooltip((layer.feature.properties['ROADNO'] !== null ? String('<div>' + layer.feature.properties['ROADNO']) + '</div>' : ''), {permanent: true, offset: [-0, -16], className: 'css_Roads_4'});
             labels.push(layer);
             totalMarkers += 1;
-              layer.added = true;
-              addLabel(layer, i);
-              i++;
+            layer.added = true;
+            addLabel(layer, i);
+            i++;
         });
+
         var i = 0;
         layer_CMS_5.eachLayer(function(layer) {
-            var context = {
-                feature: layer.feature,
-                variables: {}
-            };
-            layer.bindTooltip((layer.feature.properties['Site Name'] !== null?String('<div style="color: #000000; font-size: 12pt; font-family: \'MS Shell Dlg 2\', sans-serif;">' + layer.feature.properties['Site Name']) + '</div>':''), {permanent: true, offset: [-0, -16], className: 'css_CMS_5'});
+            layer.bindTooltip((layer.feature.properties['Site Name'] !== null ? String('<div>' + layer.feature.properties['Site Name']) + '</div>' : ''), {permanent: true, offset: [-0, -16], className: 'css_CMS_5'});
             labels.push(layer);
             totalMarkers += 1;
-              layer.added = true;
-              addLabel(layer, i);
-              i++;
+            layer.added = true;
+            addLabel(layer, i);
+            i++;
         });
+
         var i = 0;
         layer_ICBCSites_6.eachLayer(function(layer) {
-            var context = {
-                feature: layer.feature,
-                variables: {}
-            };
-            layer.bindTooltip((layer.feature.properties['Site Name'] !== null?String('<div style="color: #000000; font-size: 11pt; font-family: \'MS Shell Dlg 2\', sans-serif;">' + layer.feature.properties['Site Name']) + '</div>':''), {permanent: true, offset: [-0, -16], className: 'css_ICBCSites_6'});
+            layer.bindTooltip((layer.feature.properties['Site Name'] !== null ? String('<div>' + layer.feature.properties['Site Name']) + '</div>' : ''), {permanent: true, offset: [-0, -16], className: 'css_ICBCSites_6'});
             labels.push(layer);
             totalMarkers += 1;
-              layer.added = true;
-              addLabel(layer, i);
-              i++;
-        });
-        resetLabels([layer_eSwatiniRegions_2,layer_Roads_4,layer_CMS_5,layer_ICBCSites_6]);
-        map.on("zoomend", function(){
-            resetLabels([layer_eSwatiniRegions_2,layer_Roads_4,layer_CMS_5,layer_ICBCSites_6]);
-        });
-        map.on("layeradd", function(){
-            resetLabels([layer_eSwatiniRegions_2,layer_Roads_4,layer_CMS_5,layer_ICBCSites_6]);
-        });
-        map.on("layerremove", function(){
-            resetLabels([layer_eSwatiniRegions_2,layer_Roads_4,layer_CMS_5,layer_ICBCSites_6]);
+            layer.added = true;
+            addLabel(layer, i);
+            i++;
         });
 
-        document.addEventListener("DOMContentLoaded", () => {
-            const toggle = document.getElementById("legendToggle");
-            const layersControl = document.getElementsByClassName("leaflet-control-layers")[0];
-            const content = document.getElementById("legendContent");
-
-            toggle.addEventListener("click", () => {
-                content.classList.toggle("show");
-            });
+        resetLabels([layer_eSwatiniRegions_2, layer_Roads_4, layer_CMS_5, layer_ICBCSites_6]);
+        
+        map.on("zoomend", function() {
+            resetLabels([layer_eSwatiniRegions_2, layer_Roads_4, layer_CMS_5, layer_ICBCSites_6]);
         });
-        document.getElementById('legendToggle').addEventListener('click', () => {
-            const controls = document.getElementsByClassName('leaflet-control-layers')[0];
-            controls.classList.toggle('show');
+        
+        map.on("layeradd", function() {
+            resetLabels([layer_eSwatiniRegions_2, layer_Roads_4, layer_CMS_5, layer_ICBCSites_6]);
         });
-
+        
+        map.on("layerremove", function() {
+            resetLabels([layer_eSwatiniRegions_2, layer_Roads_4, layer_CMS_5, layer_ICBCSites_6]);
+        });
         </script>
-
     </body>
 </html>
