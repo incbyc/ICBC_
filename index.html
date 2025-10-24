@@ -30,7 +30,7 @@
             font-size: 13px;
             background-color: #ffffff;
             padding: 12px 0;
-            border-radius: 2px;
+            border-radius: 8px;
             box-shadow: 0 2px 6px rgba(0,0,0,0.3);
             width: 280px;
             max-height: calc(100vh - 120px);
@@ -73,27 +73,30 @@
         /* ===== TITLE CONTROL - Google Maps Style ===== */
         .info.leaflet-control {
             background: #ffffff;
-            padding: 16px 20px;
-            border-radius: 2px;
+            padding: 20px 24px;
+            border-radius: 12px;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 16px;
             font-family: Roboto, Arial, sans-serif;
             width: 280px;
             border: none;
         }
 
         .info.leaflet-control img {
-            height: 40px;
+            height: 55px;
+            flex-shrink: 0;
         }
 
         .info.leaflet-control h1 {
-            font-size: 18px;
+            font-size: 19px;
             margin: 0;
             font-weight: 500;
             color: #202124;
             letter-spacing: 0;
+            white-space: nowrap;
+            line-height: 1.2;
         }
 
         /* ===== MOBILE LEGEND TOGGLE - Google Maps Style ===== */
@@ -107,7 +110,7 @@
             padding: 10px 14px;
             font-size: 16px;
             font-weight: 500;
-            border-radius: 2px;
+            border-radius: 8px;
             z-index: 1001;
             cursor: pointer;
             box-shadow: 0 2px 6px rgba(0,0,0,0.3);
@@ -135,14 +138,20 @@
         .leaflet-popup-content {
             margin: 0 !important;
             width: auto !important;
-            max-width: 600px;
-            min-width: 420px;
-            font-size: 14px;
-            line-height: 1.5;
+            max-width: 480px;
+            min-width: 360px;
+            font-size: 13px;
+            line-height: 1.4;
+            overflow-x: hidden !important;
+            overflow-y: visible !important;
         }
 
         .leaflet-popup-tip {
             box-shadow: 0 3px 14px rgba(0,0,0,0.15);
+        }
+
+        .leaflet-popup {
+            margin-bottom: 40px;
         }
 
         /* ===== ICBC POPUP - Google Maps Inspired ===== */
@@ -153,34 +162,35 @@
         }
 
         .popup-header {
-            background: #ffffff;
-            padding: 20px 24px 16px 24px;
+            background: linear-gradient(135deg, #c62828 0%, #b71c1c 100%);
+            padding: 16px 20px;
             display: flex;
             align-items: center;
-            gap: 16px;
-            border-bottom: 1px solid #e8eaed;
+            gap: 12px;
+            border-bottom: none;
         }
 
         .popup-logo {
-            height: 32px;
+            height: 28px;
             flex-shrink: 0;
+            filter: brightness(0) invert(1);
         }
 
         .popup-title {
-            font-size: 22px;
+            font-size: 18px;
             margin: 0;
-            font-weight: 400;
-            color: #202124;
+            font-weight: 500;
+            color: #ffffff;
         }
 
         .popup-body {
-            padding: 20px 24px;
-            max-height: 450px;
+            padding: 16px 20px;
+            max-height: 380px;
             overflow-y: auto;
         }
 
         .popup-section {
-            margin-bottom: 24px;
+            margin-bottom: 18px;
         }
 
         .popup-section:last-child {
@@ -189,17 +199,17 @@
 
         .popup-section-title {
             font-size: 11px;
-            font-weight: 500;
+            font-weight: 600;
             text-transform: uppercase;
-            color: #5f6368;
-            margin-bottom: 12px;
-            letter-spacing: 0.8px;
+            color: #c62828;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
         }
 
         .popup-info-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 16px;
+            gap: 12px;
         }
 
         .popup-info-grid.single-column {
@@ -217,35 +227,37 @@
         }
 
         .popup-info-label {
-            font-size: 12px;
-            font-weight: 500;
+            font-size: 11px;
+            font-weight: 600;
             color: #5f6368;
             margin-bottom: 2px;
         }
 
         .popup-info-value {
-            font-size: 14px;
+            font-size: 13px;
             color: #202124;
             font-weight: 400;
+            line-height: 1.4;
         }
 
         .popup-pastor-wrapper {
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 14px;
             padding: 16px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            margin-bottom: 16px;
+            background: #ffffff;
+            border-radius: 12px;
+            margin-bottom: 14px;
+            border: 1px solid #e8eaed;
         }
 
         .popup-pastor-img-circle {
-            width: 80px;
-            height: 80px;
+            width: 100px;
+            height: 100px;
             border-radius: 50%;
             object-fit: cover;
-            border: 3px solid #ffffff;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 4px solid #ffffff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             flex-shrink: 0;
         }
 
@@ -255,7 +267,7 @@
 
         .popup-pastor-name {
             font-size: 16px;
-            font-weight: 500;
+            font-weight: 600;
             color: #202124;
             margin-bottom: 4px;
         }
@@ -263,14 +275,16 @@
         .popup-pastor-title {
             font-size: 13px;
             color: #5f6368;
+            font-weight: 500;
         }
 
         .popup-image-container {
             margin-top: 8px;
-            border-radius: 8px;
+            border-radius: 12px;
             overflow: hidden;
             background: #f8f9fa;
             border: 1px solid #e8eaed;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
 
         .popup-image {
@@ -282,16 +296,22 @@
         .popup-link {
             display: inline-flex;
             align-items: center;
-            color: #1a73e8;
+            color: #c62828;
             text-decoration: none;
-            font-weight: 500;
-            transition: color 0.2s;
+            font-weight: 600;
+            transition: all 0.2s;
             font-size: 14px;
+            padding: 10px 20px;
+            background: #fff5f5;
+            border-radius: 6px;
+            border: 1px solid #ffcdd2;
         }
 
         .popup-link:hover {
-            color: #1557b0;
-            text-decoration: underline;
+            color: #b71c1c;
+            background: #ffebee;
+            border-color: #ef9a9a;
+            text-decoration: none;
         }
 
         /* ===== CMS POPUP ===== */
@@ -300,27 +320,27 @@
         }
 
         .popup-cms-header {
-            background: #ffffff;
-            padding: 20px 24px 16px 24px;
-            border-bottom: 1px solid #e8eaed;
+            background: linear-gradient(135deg, #00897b 0%, #00695c 100%);
+            padding: 16px 20px;
+            border-bottom: none;
         }
 
         .popup-cms-title {
-            font-size: 22px;
+            font-size: 18px;
             margin: 0;
-            font-weight: 400;
-            color: #202124;
+            font-weight: 500;
+            color: #ffffff;
         }
 
         .popup-cms-body {
-            padding: 20px 24px;
+            padding: 16px 20px;
         }
 
         .popup-cms-about {
-            font-size: 14px;
+            font-size: 13px;
             color: #202124;
-            line-height: 1.6;
-            margin-bottom: 16px;
+            line-height: 1.5;
+            margin-bottom: 12px;
         }
 
         /* ===== LABEL STYLING - Clean & Minimalist ===== */
@@ -367,10 +387,12 @@
                 top: 80px;
                 right: 10px;
                 left: 10px;
-                width: auto;
-                max-width: none;
+                width: calc(100% - 20px);
+                max-width: calc(100% - 20px);
+                margin: 0;
                 max-height: calc(100vh - 100px);
                 z-index: 1002;
+                box-sizing: border-box;
             }
             
             .leaflet-control-layers.show {
@@ -383,76 +405,30 @@
 
             .info.leaflet-control {
                 width: calc(100% - 20px);
+                max-width: calc(100% - 20px);
                 margin: 10px;
                 padding: 12px 16px;
+                box-sizing: border-box;
             }
 
             .info.leaflet-control img {
-                height: 32px;
+                height: 40px;
             }
 
             .info.leaflet-control h1 {
                 font-size: 16px;
+                white-space: nowrap;
             }
 
             .leaflet-popup-content {
                 min-width: 280px;
                 max-width: calc(100vw - 40px);
+                font-size: 12px;
             }
 
             .popup-header,
             .popup-cms-header {
-                padding: 16px;
-            }
-
-            .popup-title,
-            .popup-cms-title {
-                font-size: 18px;
-            }
-
-            .popup-logo {
-                height: 28px;
-            }
-
-            .popup-body,
-            .popup-cms-body {
-                padding: 16px;
-                max-height: 350px;
-            }
-
-            .popup-info-grid {
-                grid-template-columns: 1fr;
-                gap: 12px;
-            }
-
-            .popup-pastor-wrapper {
-                flex-direction: column;
-                text-align: center;
-                padding: 12px;
-            }
-
-            .popup-pastor-img-circle {
-                width: 60px;
-                height: 60px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .info.leaflet-control {
-                padding: 10px 12px;
-            }
-
-            .info.leaflet-control img {
-                height: 28px;
-            }
-
-            .info.leaflet-control h1 {
-                font-size: 14px;
-            }
-
-            .popup-header,
-            .popup-cms-header {
-                padding: 12px;
+                padding: 14px 16px;
             }
 
             .popup-title,
@@ -466,17 +442,99 @@
 
             .popup-body,
             .popup-cms-body {
-                padding: 12px;
-                max-height: 300px;
+                padding: 14px 16px;
+                max-height: 320px;
+            }
+
+            .popup-info-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
             }
 
             .popup-section {
-                margin-bottom: 16px;
+                margin-bottom: 14px;
+            }
+
+            .popup-pastor-wrapper {
+                flex-direction: column;
+                text-align: center;
+                padding: 14px;
             }
 
             .popup-pastor-img-circle {
-                width: 50px;
-                height: 50px;
+                width: 80px;
+                height: 80px;
+            }
+
+            .popup-pastor-name {
+                font-size: 15px;
+            }
+
+            .popup-pastor-title {
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .leaflet-control-layers {
+                width: calc(100% - 20px);
+                max-width: calc(100% - 20px);
+                box-sizing: border-box;
+            }
+
+            .info.leaflet-control {
+                padding: 10px 12px;
+                box-sizing: border-box;
+            }
+
+            .info.leaflet-control img {
+                height: 35px;
+            }
+
+            .info.leaflet-control h1 {
+                font-size: 14px;
+                white-space: nowrap;
+            }
+
+            .popup-header,
+            .popup-cms-header {
+                padding: 12px 14px;
+            }
+
+            .popup-title,
+            .popup-cms-title {
+                font-size: 15px;
+            }
+
+            .popup-logo {
+                height: 22px;
+            }
+
+            .popup-body,
+            .popup-cms-body {
+                padding: 12px 14px;
+                max-height: 280px;
+            }
+
+            .popup-section {
+                margin-bottom: 12px;
+            }
+
+            .popup-pastor-img-circle {
+                width: 70px;
+                height: 70px;
+            }
+
+            .popup-pastor-name {
+                font-size: 14px;
+            }
+
+            .popup-info-label {
+                font-size: 10px;
+            }
+
+            .popup-info-value {
+                font-size: 12px;
             }
 
             .css_ICBCSites_6,
@@ -486,22 +544,23 @@
 
             .leaflet-popup-content {
                 min-width: 260px;
+                font-size: 11px;
             }
         }
 
         /* Tablet specific - wider popups */
         @media (min-width: 769px) and (max-width: 1024px) {
             .leaflet-popup-content {
-                min-width: 500px;
-                max-width: 550px;
+                min-width: 400px;
+                max-width: 450px;
             }
         }
 
         /* Desktop - widest popups */
         @media (min-width: 1025px) {
             .leaflet-popup-content {
-                min-width: 550px;
-                max-width: 600px;
+                min-width: 420px;
+                max-width: 480px;
             }
         }
 
@@ -760,7 +819,7 @@
                         ` : ''}
                     </div>
                 </div>`;
-            layer.bindPopup(popupContent, {maxHeight: 500, maxWidth: 600});
+            layer.bindPopup(popupContent, {maxHeight: 400, maxWidth: 480, autoPanPadding: [20, 20]});
         }
 
         map.createPane('pane_CMS_5');
@@ -937,7 +996,7 @@
                         ` : ''}
                     </div>
                 </div>`;
-            layer.bindPopup(popupContent, {maxHeight: 500, maxWidth: 600});
+            layer.bindPopup(popupContent, {maxHeight: 400, maxWidth: 480, autoPanPadding: [20, 20]});
         }
 
         map.createPane('pane_ICBCSites_6');
