@@ -1,0 +1,1884 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>ICBC Church Profile</title>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+        <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #c14b40;
+            --primary-dark: #a03d33;
+            --primary-light: #f5d7d3;
+            --secondary: #333333;
+            --surface: #ffffff;
+            --background: #fafafa;
+            --background-alt: #f1f5f9;
+            --text: #333333;
+            --text-muted: #666666;
+            --border: #e0e0e0;
+            --transition-speed: 0.3s;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        /* Navbar */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(51, 51, 51, 0.98);
+            backdrop-filter: blur(18px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            padding: 0.9rem 0;
+        }
+
+        .nav-inner {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.5rem;
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .nav-logo {
+            width: 38px;
+            height: 38px;
+            background: var(--primary);
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .nav-brand-main {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .nav-brand-sub {
+            font-size: 0.8rem;
+            color: #e5e5e5;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+            font-size: 0.88rem;
+        }
+
+        .nav-link {
+            color: #f9fafb;
+            text-decoration: none;
+            font-weight: 500;
+            position: relative;
+        }
+
+        .nav-link::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            bottom: -4px;
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            transition: width var(--transition-speed) ease;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .nav-button {
+            border-radius: 999px;
+            padding: 0.4rem 0.9rem;
+            border: 1px solid rgba(248, 250, 252, 0.2);
+            background: rgba(15, 23, 42, 0.9);
+            color: #f9fafb;
+            font-size: 0.8rem;
+            text-decoration: none;
+        }
+
+        main {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 5rem 1.5rem 2.5rem;
+        }
+
+        /* Hero */
+        .hero {
+            position: relative;
+            height: 60vh;
+            min-height: 380px;
+            border-radius: 24px;
+            overflow: hidden;
+            background: linear-gradient(135deg, rgba(51,51,51,0.85) 0%, rgba(193,75,64,0.75) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .hero-bg {
+            position: absolute;
+            inset: 0;
+            background-size: 260% auto;
+            background-position: 0% 50%;
+            background-repeat: no-repeat;
+            filter: brightness(0.85);
+            animation: hero-pan 40s linear infinite alternate;
+        }
+
+        .hero-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(0,0,0,0.65), rgba(0,0,0,0.25));
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            color: #fff;
+            padding: 1.5rem;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.35rem 0.8rem;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.55);
+            font-size: 0.78rem;
+            margin-bottom: 1.1rem;
+            background: rgba(15,23,42,0.35);
+        }
+
+        .hero-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.7rem, 5vw, 3.8rem);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            text-shadow: 0 4px 24px rgba(0,0,0,0.55);
+            margin-bottom: 0.6rem;
+        }
+
+        .hero-subtitle {
+            font-size: 0.98rem;
+            opacity: 0.95;
+        }
+
+        @keyframes hero-pan {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+
+        /* Layout grid */
+        .grid-main {
+            display: grid;
+            grid-template-columns: minmax(0, 1.6fr) minmax(0, 1.2fr);
+            gap: 1.75rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: 20px;
+            padding: 1.5rem 1.6rem 1.7rem;
+            border: 1px solid rgba(226,232,240,0.9);
+            box-shadow: 0 10px 30px rgba(15,23,42,0.06);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-size: 0.88rem;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            color: var(--text-muted);
+        }
+
+        .card-pill {
+            font-size: 0.75rem;
+            padding: 0.2rem 0.65rem;
+            border-radius: 999px;
+            background: var(--background-alt);
+            color: var(--text-muted);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.9rem 1.4rem;
+        }
+
+        .info-item-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            color: var(--text-muted);
+        }
+
+        .info-item-value {
+            font-size: 0.98rem;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .pastor-row {
+            display: flex;
+            gap: 1.2rem;
+            align-items: center;
+        }
+
+        .pastor-photo {
+            width: 92px;
+            height: 92px;
+            border-radius: 999px;
+            object-fit: cover;
+            background: #e5e7eb;
+        }
+
+        .pastor-name {
+            font-size: 1.05rem;
+            font-weight: 600;
+        }
+
+        .pastor-role {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+        }
+
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 1rem;
+        }
+
+        .team-card {
+            border-radius: 16px;
+            padding: 0.9rem 1rem;
+            background: var(--background-alt);
+            border: 1px solid rgba(226,232,240,0.9);
+            display: flex;
+            gap: 0.7rem;
+            align-items: center;
+        }
+
+        .team-photo {
+            width: 52px;
+            height: 52px;
+            border-radius: 999px;
+            object-fit: cover;
+            background: #e5e7eb;
+            flex-shrink: 0;
+        }
+
+        .team-name {
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .team-role {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .team-desc {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin-top: 0.35rem;
+            line-height: 1.45;
+        }
+
+        .team-meta {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-top: 0.2rem;
+        }
+
+        .team-card-wide {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .team-card-wide .team-head {
+            display: flex;
+            gap: 0.7rem;
+            align-items: center;
+            width: 100%;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.7fr);
+            gap: 1.1rem;
+            margin-top: 1.2rem;
+        }
+
+        .stats-card {
+            border-radius: 16px;
+            padding: 1rem 1.1rem;
+            background: var(--background-alt);
+            border: 1px solid rgba(226,232,240,0.9);
+        }
+
+        .stats-title {
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            color: var(--text-muted);
+            margin-bottom: 0.7rem;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.7rem 1rem;
+        }
+
+        .kpi {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+        }
+
+        .kpi-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+        }
+
+        .kpi-value {
+            font-size: 1.05rem;
+            font-weight: 600;
+        }
+
+        .section {
+            margin-top: 1.4rem;
+        }
+
+        .section-title {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            color: var(--text-muted);
+            margin-bottom: 0.7rem;
+        }
+
+        .body-text {
+            font-size: 0.95rem;
+            color: var(--text);
+        }
+
+        .pill-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.45rem;
+            margin-top: 0.4rem;
+        }
+
+        .pill {
+            font-size: 0.78rem;
+            padding: 0.25rem 0.65rem;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: #fff;
+        }
+
+        .update-list {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
+            gap: 0.8rem;
+        }
+
+        .update-item {
+            padding-bottom: 0.7rem;
+            border-bottom: 1px solid rgba(226,232,240,0.9);
+        }
+
+        .update-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .update-date {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-bottom: 0.3rem;
+        }
+
+        .update-body {
+            font-size: 0.9rem;
+            color: var(--text);
+        }
+
+        .muted-note {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 0.4rem;
+        }
+
+        footer {
+            margin-top: 1.8rem;
+            padding: 1.2rem 0 1.4rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        .state {
+            max-width: 520px;
+            margin: 6rem auto 2rem;
+            padding: 1.5rem 1.4rem 1.6rem;
+            border-radius: 18px;
+            border: 1px solid rgba(226,232,240,0.9);
+            background: #fff;
+            text-align: center;
+        }
+
+        .state-title {
+            font-size: 1rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .state-body {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .hidden { display: none; }
+
+        @media (max-width: 900px) {
+            .grid-main {
+                grid-template-columns: minmax(0, 1fr);
+            }
+            .stats-row {
+                grid-template-columns: minmax(0, 1fr);
+            }
+            .nav-links {
+                display: none;
+            }
+        }
+        </style>
+    </head>
+    <body>
+        <header class="navbar">
+            <div class="nav-inner">
+                <div class="nav-left">
+                    <div class="nav-logo">IC</div>
+                    <div>
+                        <div class="nav-brand-main">ICBC Eswatini</div>
+                        <div class="nav-brand-sub">Challenge Ministries church profile</div>
+                    </div>
+                </div>
+                <div class="nav-links">
+                    <a href="#overview" class="nav-link">Overview</a>
+                    <a href="#ministry-team" class="nav-link">Ministry team</a>
+                    <a href="#stats" class="nav-link">Stats</a>
+                    <a href="#agriculture" class="nav-link">Agriculture</a>
+                    <a href="#updates" class="nav-link">Updates</a>
+                </div>
+                <a href="index.html" class="nav-button">← Back to map</a>
+            </div>
+        </header>
+
+        <main id="main-shell" class="hidden">
+            <section class="hero">
+                <div id="hero-bg" class="hero-bg"></div>
+                <div class="hero-overlay"></div>
+                <div class="hero-content">
+                    <div class="hero-badge">
+                        <span id="hero-region">Region</span>
+                        <span>•</span>
+                        <span id="hero-year">Year</span>
+                    </div>
+                    <h1 id="hero-title" class="hero-title">ICBC Site</h1>
+                    <p id="hero-subtitle" class="hero-subtitle">Site overview</p>
+                </div>
+            </section>
+
+            <section class="grid-main" id="overview">
+                <article class="card">
+                    <div class="card-header">
+                        <div class="card-title">Site overview</div>
+                        <div class="card-pill" id="overview-pill">ICBC site</div>
+                    </div>
+                    <div class="info-grid" id="info-grid"></div>
+                    <div class="section">
+                        <div class="section-title">Story &amp; impact</div>
+                        <p class="body-text" id="about-text"></p>
+                    </div>
+                    <div class="section" id="agriculture">
+                        <div class="section-title">Agriculture &amp; ploughing</div>
+                        <div id="ploughing-content" class="pill-row"></div>
+                        <p class="muted-note" id="maize-note"></p>
+                    </div>
+                </article>
+
+                <aside class="card" id="ministry-team">
+                    <div class="card-header">
+                        <div class="card-title">Ministry team</div>
+                        <p class="muted-note" id="staff-count-note" style="margin:0.35rem 0 0"></p>
+                    </div>
+                    <div class="section">
+                        <div class="section-title">Local pastor</div>
+                        <div class="pastor-row" id="pastor-shell"></div>
+                    </div>
+                    <div id="staff-sections-shell"></div>
+                </aside>
+            </section>
+
+            <section class="grid-main" id="stats">
+                <article class="card">
+                    <div class="card-header">
+                        <div class="card-title">Weekly church statistics</div>
+                    </div>
+                    <div id="stats-shell">
+                        <p class="muted-note">Weekly statistics will appear here once they are recorded for this ICBC.</p>
+                    </div>
+                </article>
+
+                <aside class="card" id="updates">
+                    <div class="card-header">
+                        <div class="card-title">Recent updates</div>
+                    </div>
+                    <div id="updates-shell" class="update-list"></div>
+                </aside>
+            </section>
+
+            <footer>
+                © <span id="year-footer"></span> ICBC Eswatini · Challenge Ministries Swaziland
+            </footer>
+        </main>
+
+        <section id="state-empty" class="state hidden">
+            <div class="state-title">ICBC site not found</div>
+            <div class="state-body">
+                The link is missing a valid ICBC site name. Go back to the map and open the site
+                from there, or make sure the <code>?site=</code> parameter matches an existing ICBC.
+            </div>
+        </section>
+
+        <section id="state-loading" class="state">
+            <div class="state-title">Loading ICBC profile…</div>
+            <div class="state-body">
+                Fetching this ICBC’s story, team, statistics and agriculture impact.
+            </div>
+        </section>
+
+        <script>
+        (function () {
+            var params = new URLSearchParams(window.location.search);
+            var siteParam = params.get('site');
+
+            var mainEl = document.getElementById('main-shell');
+            var loadingEl = document.getElementById('state-loading');
+            var emptyEl = document.getElementById('state-empty');
+
+            document.getElementById('year-footer').textContent = new Date().getFullYear();
+
+            function slugifyForApi(text) {
+                if (!text) return '';
+                return String(text)
+                    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                    .trim()
+                    .toLowerCase()
+                    .replace(/[^a-z0-9]+/g, '-')
+                    .replace(/^-+|-+$/g, '');
+            }
+
+            if (!siteParam) {
+                loadingEl.classList.add('hidden');
+                emptyEl.classList.remove('hidden');
+                return;
+            }
+
+            var slug = slugifyForApi(siteParam);
+            if (!slug) {
+                loadingEl.classList.add('hidden');
+                emptyEl.classList.remove('hidden');
+                return;
+            }
+
+            var API_BASE = 'http://127.0.0.1:8000';
+            var url = API_BASE + '/api/icbc/sites/' + encodeURIComponent(slug) + '/';
+
+            fetch(url)
+                .then(function (res) {
+                    if (!res.ok) {
+                        throw new Error('HTTP ' + res.status);
+                    }
+                    return res.json();
+                })
+                .then(function (data) {
+                    renderPage(data);
+                    loadingEl.classList.add('hidden');
+                    emptyEl.classList.add('hidden');
+                    mainEl.classList.remove('hidden');
+                })
+                .catch(function (err) {
+                    console.error('Error loading ICBC profile', err);
+                    loadingEl.classList.add('hidden');
+                    emptyEl.classList.remove('hidden');
+                });
+
+            function joinNonEmpty(parts, sep) {
+                return parts.filter(Boolean).join(sep || ' · ');
+            }
+
+
+            function buildStaffFromLegacy(site) {
+                var staff = site.staff ? site.staff.slice() : [];
+                if (!staff.length) {
+                    if (site.pastor && site.pastor.name) {
+                        staff.push({
+                            full_name: site.pastor.name,
+                            role: 'Pastor',
+                            description: site.pastor.description || '',
+                            year_joined: site.pastor.year_joined || null,
+                            photo: site.pastor.photo
+                        });
+                    }
+                    (site.teachers || []).forEach(function (t) {
+                        staff.push({
+                            full_name: t.name,
+                            role: 'Teacher',
+                            description: t.description || '',
+                            year_joined: t.year_joined || null,
+                            photo: t.photo,
+                            sort_order: t.sort_order || 0
+                        });
+                    });
+                    (site.care_team || []).forEach(function (c) {
+                        staff.push({
+                            full_name: c.name,
+                            role: 'Compassionate Care',
+                            description: c.description || '',
+                            year_joined: c.year_joined || null,
+                            photo: c.photo,
+                            sort_order: c.sort_order || 0
+                        });
+                    });
+                }
+                return staff;
+            }
+
+            function staffPhotoUrl(person) {
+                if (person.photo) return person.photo;
+                if (person.photo_url) return person.photo_url;
+                return null;
+            }
+
+            function renderStaffCard(person) {
+                var img = staffPhotoUrl(person);
+                var imgHtml = img
+                    ? '<img class="team-photo" src="' + img + '" alt="">'
+                    : '<div class="team-photo"></div>';
+                var year = person.year_joined
+                    ? '<p class="team-meta">Joined ' + person.year_joined + '</p>'
+                    : '';
+                var desc = person.description
+                    ? '<p class="team-desc">' + person.description + '</p>'
+                    : '';
+                return (
+                    '<div class="team-card team-card-wide">' +
+                    '<div class="team-head">' + imgHtml +
+                    '<div><div class="team-name">' + person.full_name + '</div>' +
+                    '<div class="team-role">' + (person.role || 'Staff') + '</div>' +
+                    year + '</div></div>' + desc + '</div>'
+                );
+            }
+
+            function renderMinistryTeam(site) {
+                var staff = buildStaffFromLegacy(site);
+                var count = site.staff_count != null ? site.staff_count : staff.length;
+                var countNote = document.getElementById('staff-count-note');
+                if (countNote) {
+                    countNote.textContent = count
+                        ? count + ' staff member' + (count === 1 ? '' : 's') + ' at this ICBC'
+                        : '';
+                }
+
+                var pastorShell = document.getElementById('pastor-shell');
+                pastorShell.innerHTML = '';
+                var pastor = null;
+                staff.forEach(function (p) {
+                    if (p.role === 'Pastor') pastor = p;
+                });
+                if (!pastor && site.pastor && site.pastor.name) {
+                    pastor = {
+                        full_name: site.pastor.name,
+                        description: site.pastor.description || '',
+                        photo: site.pastor.photo
+                    };
+                }
+                if (pastor && pastor.full_name) {
+                    var pImg = staffPhotoUrl(pastor);
+                    if (pImg) {
+                        pastorShell.innerHTML += '<img class="pastor-photo" src="' + pImg + '" alt="">';
+                    }
+                    pastorShell.innerHTML += '<div><div class="pastor-name">' + pastor.full_name + '</div>';
+                    if (pastor.description) {
+                        pastorShell.innerHTML += '<p class="team-desc">' + pastor.description + '</p>';
+                    }
+                    pastorShell.innerHTML += '</div>';
+                } else {
+                    pastorShell.innerHTML = '<p class="muted-note">Add a pastor in Supabase (staff table, role Pastor).</p>';
+                }
+
+                var shell = document.getElementById('staff-sections-shell');
+                shell.innerHTML = '';
+                [
+                    { title: 'Teachers', role: 'Teacher' },
+                    { title: 'Compassionate care team', role: 'Compassionate Care' },
+                    { title: 'Other staff', role: 'Other' }
+                ].forEach(function (g) {
+                    var people = staff.filter(function (p) { return p.role === g.role; });
+                    if (!people.length) return;
+                    var html = '<div class="section"><div class="section-title">' + g.title + '</div><div class="team-grid">';
+                    people.forEach(function (p) { html += renderStaffCard(p); });
+                    html += '</div></div>';
+                    shell.innerHTML += html;
+                });
+                if (!shell.innerHTML) {
+                    shell.innerHTML = '<p class="muted-note">Add teachers and care team in Supabase (staff table).</p>';
+                }
+            }
+
+            function renderPage(site) {
+                // Hero
+                var heroTitle = document.getElementById('hero-title');
+                var heroRegion = document.getElementById('hero-region');
+                var heroYear = document.getElementById('hero-year');
+                var heroSubtitle = document.getElementById('hero-subtitle');
+                var heroBg = document.getElementById('hero-bg');
+
+                heroTitle.textContent = site.name || 'ICBC Site';
+                heroRegion.textContent = site.region || 'Region';
+                heroYear.textContent = site.year_constructed ? 'Since ' + site.year_constructed : 'Established';
+
+                heroSubtitle.textContent = joinNonEmpty(
+                    [site.water_source || '', site.preschool_summary || ''],
+                    ' • '
+                ) || 'ICBC site overview';
+
+                var bgUrl = null;
+                if (site.cover_image) {
+                    bgUrl = site.cover_image;
+                } else if (site.photo_path) {
+                    bgUrl = 'images/' + String(site.photo_path).replace(/[\\\/:]/g, '_').trim();
+                }
+                if (bgUrl) {
+                    heroBg.style.backgroundImage = "url('" + bgUrl + "')";
+                }
+
+                var overviewPill = document.getElementById('overview-pill');
+                overviewPill.textContent = site.region ? site.region + ' ICBC' : 'ICBC site';
+
+                // Site info grid
+                var infoGrid = document.getElementById('info-grid');
+                var infoHtml = '';
+
+                function addInfo(label, value) {
+                    if (!value) return;
+                    infoHtml += '<div><div class="info-item-label">' + label +
+                        '</div><div class="info-item-value">' + value + '</div></div>';
+                }
+
+                addInfo('Region', site.region);
+                addInfo('Year constructed', site.year_constructed);
+                addInfo('Water source', site.water_source);
+                addInfo('Preschool', site.preschool_summary);
+                addInfo('Ploughing season', site.ploughing_season);
+                addInfo('Families ploughed for', site.families_ploughed_for);
+                addInfo('Area ploughed', site.area_ploughed);
+                infoGrid.innerHTML = infoHtml;
+
+                // Story & impact
+                var aboutText = document.getElementById('about-text');
+                aboutText.textContent = site.about || 'A narrative of this ICBC site will appear here as content is added.';
+
+                // Ploughing + maize
+                var ploughEl = document.getElementById('ploughing-content');
+                var maizeNote = document.getElementById('maize-note');
+                var ploughParts = [];
+
+                if (site.hours_ploughed) {
+                    ploughParts.push('Hours: ' + site.hours_ploughed);
+                }
+                if (site.area_ploughed) {
+                    ploughParts.push('Hectares: ' + site.area_ploughed);
+                }
+                if (site.families_ploughed_for) {
+                    ploughParts.push('Families: ' + site.families_ploughed_for);
+                }
+
+                if (ploughParts.length) {
+                    ploughEl.innerHTML = ploughParts.map(function (p) {
+                        return '<span class="pill">' + p + '</span>';
+                    }).join('');
+                } else {
+                    ploughEl.innerHTML = '<span class="muted-note">Ploughing statistics will appear here once they are recorded.</span>';
+                }
+
+                if (site.maize_tonnes_purchased || site.maize_farmers_supported) {
+                    var maize = [];
+                    if (site.maize_tonnes_purchased) {
+                        maize.push(site.maize_tonnes_purchased + ' tonnes purchased');
+                    }
+                    if (site.maize_farmers_supported) {
+                        maize.push(site.maize_farmers_supported + ' farmers supported');
+                    }
+                    maizeNote.textContent = 'Maize buy-back programme: ' + maize.join(' · ');
+                } else {
+                    maizeNote.textContent = '';
+                }
+
+                renderMinistryTeam(site);
+
+                // Stats summary
+                var statsShell = document.getElementById('stats-shell');
+                var summary = site.stats_summary;
+                if (!summary) {
+                    statsShell.innerHTML = '<p class="muted-note">Weekly statistics will appear here once they are recorded for this ICBC.</p>';
+                } else {
+                    var html = '';
+                    html += '<div class="stats-row">';
+
+                    // Average Sunday
+                    html += '<div class="stats-card">';
+                    html += '<div class="stats-title">Average Sunday</div>';
+                    html += '<div class="kpi-grid">';
+                    html += '<div class="kpi"><div class="kpi-label">Total attendance</div><div class="kpi-value">' +
+                        (summary.avg_total_attendance || 0) + '</div></div>';
+                    html += '<div class="kpi"><div class="kpi-label">Children</div><div class="kpi-value">' +
+                        (summary.avg_children || 0) + '</div></div>';
+                    html += '<div class="kpi"><div class="kpi-label">Preschool (avg)</div><div class="kpi-value">' +
+                        (summary.avg_preschool || 0) + '</div></div>';
+                    html += '<div class="kpi"><div class="kpi-label">Sundays recorded</div><div class="kpi-value">' +
+                        (summary.sundays_recorded || 0) + '</div></div>';
+                    html += '</div>';
+                    html += '<p class="muted-note">Averages are calculated over Sundays where attendance &gt; 0.</p>';
+                    html += '</div>';
+
+                    // Cumulative impact
+                    html += '<div class="stats-card">';
+                    html += '<div class="stats-title">Cumulative impact</div>';
+                    html += '<div class="kpi-grid">';
+                    html += '<div class="kpi"><div class="kpi-label">Salvations</div><div class="kpi-value">' +
+                        (summary.total_salvations || 0) + '</div></div>';
+                    html += '<div class="kpi"><div class="kpi-label">Baptisms</div><div class="kpi-value">' +
+                        (summary.total_baptisms || 0) + '</div></div>';
+                    html += '<div class="kpi"><div class="kpi-label">Home visits</div><div class="kpi-value">' +
+                        (summary.total_home_visits || 0) + '</div></div>';
+                    html += '<div class="kpi"><div class="kpi-label">Meals / food packs</div><div class="kpi-value">' +
+                        (summary.total_meals || 0) + '</div></div>';
+                    html += '<div class="kpi"><div class="kpi-label">Preschool children impacted</div><div class="kpi-value">' +
+                        (summary.total_preschool_attendance || 0) + '</div></div>';
+                    html += '</div>';
+                    html += '</div>';
+
+                    html += '</div>';
+                    statsShell.innerHTML = html;
+                }
+
+                // Updates
+                var updatesShell = document.getElementById('updates-shell');
+                updatesShell.innerHTML = '';
+                if (site.updates && site.updates.length) {
+                    site.updates.forEach(function (u) {
+                        var created = u.created_at ? new Date(u.created_at) : null;
+                        var dateLabel = created ? created.toLocaleDateString() : '';
+                        updatesShell.innerHTML +=
+                            '<div class="update-item">' +
+                                (dateLabel ? '<div class="update-date">' + dateLabel + '</div>' : '') +
+                                '<div class="update-title">' + (u.title || 'Update') + '</div>' +
+                                (u.body ? '<div class="update-body">' + u.body + '</div>' : '') +
+                            '</div>';
+                    });
+                } else {
+                    updatesShell.innerHTML = '<p class="muted-note">Updates about this ICBC will appear here once added in the admin.</p>';
+                }
+            }
+        })();
+        </script>
+    </body>
+</html>
+
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>ICBC Site Details</title>
+        <link rel="stylesheet" href="css/leaflet.css">
+        <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background: radial-gradient(circle at top left, #020617 0%, #020617 45%, #000000 100%);
+            color: #e5e7eb;
+            min-height: 100%;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .page-shell {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-header {
+            height: 60px;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(148,163,184,0.3);
+            backdrop-filter: blur(18px);
+            background: linear-gradient(to right, rgba(15,23,42,0.95), rgba(15,23,42,0.8));
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .detail-header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .detail-logo {
+            width: 34px;
+            height: 34px;
+            border-radius: 999px;
+            background: radial-gradient(circle at 30% 30%, #fecaca 0%, #b91c1c 50%, #020617 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 25px rgba(248,113,113,0.45);
+        }
+
+        .detail-logo img {
+            width: 20px;
+            height: 20px;
+        }
+
+        .detail-title-main {
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .detail-title-sub {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border-radius: 999px;
+            padding: 7px 14px;
+            border: 1px solid rgba(148,163,184,0.4);
+            background: rgba(15,23,42,0.9);
+            color: #e5e7eb;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            background: rgba(15,23,42,1);
+        }
+
+        .content {
+            max-width: 1080px;
+            margin: 18px auto 32px;
+            padding: 0 16px 24px;
+            display: grid;
+            grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+            gap: 22px;
+        }
+
+        .content-single {
+            max-width: 1080px;
+            margin: 18px auto 32px;
+            padding: 0 16px 24px;
+        }
+
+        .card {
+            background: radial-gradient(circle at top left, #020617 0%, #020617 20%, #020617 60%, #020617 100%);
+            border-radius: 18px;
+            border: 1px solid rgba(148,163,184,0.35);
+            box-shadow: 0 24px 80px rgba(15,23,42,1);
+            overflow: hidden;
+        }
+
+        .card-inner {
+            padding: 20px 22px 22px;
+        }
+
+        .hero-image-shell {
+            position: relative;
+            height: 220px;
+            overflow: hidden;
+            background: radial-gradient(circle at top left, #1f2937 0%, #020617 55%, #000000 100%);
+        }
+
+        .hero-image {
+            width: 130%;
+            max-width: none;
+            height: 100%;
+            object-fit: cover;
+            transform: translateX(-10%);
+            animation: hero-pan 38s linear infinite alternate;
+            filter: contrast(1.08) saturate(1.1);
+        }
+
+        .hero-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(15,23,42,0.92), transparent 45%);
+        }
+
+        .hero-label {
+            position: absolute;
+            left: 18px;
+            bottom: 18px;
+            display: inline-flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .hero-chip {
+            align-self: flex-start;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            background: rgba(15,23,42,0.9);
+            border: 1px solid rgba(148,163,184,0.7);
+            color: #e5e7eb;
+        }
+
+        .hero-title {
+            font-size: 22px;
+            font-weight: 650;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+            text-shadow: 0 18px 40px rgba(0,0,0,0.9);
+        }
+
+        .hero-meta {
+            font-size: 12px;
+            color: #d1d5db;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .hero-meta span {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .chip-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 999px;
+            background: #22c55e;
+            box-shadow: 0 0 8px rgba(34,197,94,0.85);
+        }
+
+        .section-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            margin-bottom: 10px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px 18px;
+        }
+
+        .grid-item-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            color: #9ca3af;
+            margin-bottom: 3px;
+        }
+
+        .grid-item-value {
+            font-size: 14px;
+            font-weight: 500;
+            color: #e5e7eb;
+        }
+
+        .pill-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .pill {
+            font-size: 11px;
+            border-radius: 999px;
+            padding: 4px 10px;
+            border: 1px solid rgba(148,163,184,0.6);
+            background: rgba(15,23,42,0.9);
+            color: #e5e7eb;
+        }
+
+        .pastor-shell {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .pastor-img-circle {
+            width: 104px;
+            height: 104px;
+            border-radius: 999px;
+            object-fit: cover;
+            border: 3px solid #020617;
+            box-shadow: 0 18px 45px rgba(0,0,0,0.9);
+            background: #020617;
+            flex-shrink: 0;
+        }
+
+        .pastor-name {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .pastor-role {
+            font-size: 13px;
+            color: #9ca3af;
+        }
+
+        .pastor-meta {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #d1d5db;
+        }
+
+        .about-body {
+            font-size: 14px;
+            line-height: 1.7;
+            color: #e5e7eb;
+        }
+
+        .about-body strong {
+            color: #f97316;
+            font-weight: 600;
+        }
+
+        .stat-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .stat-pill {
+            border-radius: 12px;
+            padding: 6px 10px;
+            font-size: 11px;
+            border: 1px solid rgba(148,163,184,0.5);
+            background: rgba(15,23,42,0.9);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .stat-pill-label {
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: #9ca3af;
+        }
+
+        .stat-pill-value {
+            font-weight: 600;
+            color: #e5e7eb;
+        }
+
+        /* Stats summary cards */
+        .stats-shell {
+            margin-top: 18px;
+            display: grid;
+            grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.7fr);
+            gap: 16px;
+        }
+
+        .stats-card {
+            border-radius: 14px;
+            padding: 14px 16px;
+            background: rgba(15,23,42,0.96);
+            border: 1px solid rgba(148,163,184,0.45);
+        }
+
+        .stats-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            color: #9ca3af;
+            margin-bottom: 10px;
+        }
+
+        .stats-kpi-row {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px 14px;
+        }
+
+        .stats-kpi {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .stats-kpi-label {
+            font-size: 11px;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+        }
+
+        .stats-kpi-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #e5e7eb;
+        }
+
+        .stats-note {
+            margin-top: 10px;
+            font-size: 11px;
+            color: #6b7280;
+        }
+
+        .button-row {
+            margin-top: 18px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border-radius: 999px;
+            padding: 9px 16px;
+            font-size: 13px;
+            font-weight: 500;
+            border: 1px solid transparent;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(to right, #f97316, #ea580c);
+            color: #111827;
+            border-color: rgba(249,115,22,0.85);
+            box-shadow: 0 18px 45px rgba(249,115,22,0.4);
+        }
+
+        .btn-primary:hover {
+            filter: brightness(1.05);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border-color: rgba(148,163,184,0.6);
+            color: #e5e7eb;
+        }
+
+        .btn-outline:hover {
+            background: rgba(15,23,42,0.9);
+        }
+
+        .state {
+            max-width: 520px;
+            margin: 72px auto 0;
+            padding: 22px 20px;
+            border-radius: 18px;
+            border: 1px dashed rgba(148,163,184,0.7);
+            background: radial-gradient(circle at top left, rgba(15,23,42,0.9) 0%, rgba(15,23,42,1) 50%, rgba(15,23,42,1) 100%);
+            text-align: center;
+        }
+
+        .state-title {
+            font-size: 18px;
+            margin-bottom: 6px;
+        }
+
+        .state-body {
+            font-size: 14px;
+            color: #9ca3af;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        footer {
+            padding: 10px 18px 18px;
+            font-size: 11px;
+            color: #6b7280;
+            text-align: center;
+        }
+
+        @keyframes hero-pan {
+            0% {
+                transform: translateX(-12%);
+            }
+            100% {
+                transform: translateX(-32%);
+            }
+        }
+
+        @media (max-width: 900px) {
+            .content {
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .detail-header {
+                padding: 0 12px;
+            }
+
+            .detail-title-main {
+                font-size: 12px;
+            }
+
+            .detail-title-sub {
+                font-size: 11px;
+            }
+
+            .back-link {
+                padding-inline: 10px;
+            }
+
+            .hero-image-shell {
+                height: 200px;
+            }
+        }
+        </style>
+    </head>
+    <body>
+        <div class="page-shell">
+            <header class="detail-header">
+                <div class="detail-header-left">
+                    <div class="detail-logo">
+                        <img src="markers/flames.svg" alt="ICBC" />
+                    </div>
+                    <div>
+                        <div class="detail-title-main">ICBC Eswatini</div>
+                        <div class="detail-title-sub">Site overview</div>
+                    </div>
+                </div>
+                <a href="index.html" class="back-link">
+                    <span>←</span>
+                    <span>Back to map</span>
+                </a>
+            </header>
+
+            <main id="icbc-main" class="hidden">
+                <section class="content" id="icbc-layout">
+                    <article class="card">
+                        <div class="hero-image-shell" id="hero-shell">
+                            <img id="hero-image" class="hero-image" src="" alt="ICBC site panorama" />
+                            <div class="hero-overlay"></div>
+                            <div class="hero-label">
+                                <div class="hero-chip">
+                                    <span class="chip-dot"></span>
+                                    <span id="hero-region">Region</span>
+                                </div>
+                                <div class="hero-title" id="hero-title">ICBC Site</div>
+                                <div class="hero-meta">
+                                    <span id="hero-year"></span>
+                                    <span id="hero-water"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-inner">
+                            <div class="section-label">Site snapshot</div>
+                            <div class="grid" id="snapshot-grid">
+                                <!-- Filled by script -->
+                            </div>
+                        </div>
+                    </article>
+
+                    <aside class="card">
+                        <div class="card-inner" id="pastor-shell">
+                            <!-- Filled by script -->
+                        </div>
+                    </aside>
+                </section>
+
+                <section class="content-single">
+                    <article class="card">
+                        <div class="card-inner" id="about-shell">
+                            <!-- Filled by script -->
+                        </div>
+                    </article>
+                </section>
+            </main>
+
+            <section id="icbc-empty" class="state hidden">
+                <div class="state-title">ICBC site not found</div>
+                <div class="state-body">
+                    The link is missing a valid ICBC site name. Go back to the map and open the site
+                    from there, or make sure the <code>?site=</code> parameter matches an existing ICBC.
+                </div>
+            </section>
+
+            <section id="icbc-loading" class="state">
+                <div class="state-title">Loading ICBC details…</div>
+                <div class="state-body">
+                    Fetching ICBC profile from the map dataset.
+                </div>
+            </section>
+
+            <footer>
+                © <span id="year-footer"></span> ICBC Eswatini · Challenge Ministries Swaziland
+            </footer>
+        </div>
+
+        <script src="data/ICBCSites_6.js"></script>
+        <script>
+        (function () {
+            var params = new URLSearchParams(window.location.search);
+            var siteParam = params.get('site');
+            var loadingEl = document.getElementById('icbc-loading');
+            var emptyEl = document.getElementById('icbc-empty');
+            var mainEl = document.getElementById('icbc-main');
+            var heroImageEl = document.getElementById('hero-image');
+            var heroTitleEl = document.getElementById('hero-title');
+            var heroRegionEl = document.getElementById('hero-region');
+            var heroYearEl = document.getElementById('hero-year');
+            var heroWaterEl = document.getElementById('hero-water');
+            var snapshotGridEl = document.getElementById('snapshot-grid');
+            var pastorShellEl = document.getElementById('pastor-shell');
+            var aboutShellEl = document.getElementById('about-shell');
+
+            document.getElementById('year-footer').textContent = new Date().getFullYear();
+
+            function normaliseName(value) {
+                if (!value) return '';
+                return String(value).trim().toLowerCase();
+            }
+
+            function slugifyForApi(text) {
+                if (!text) return '';
+                return String(text)
+                    .trim()
+                    .toLowerCase()
+                    .replace(/[\u0300-\u036f]/g, '')
+                    .replace(/[^a-z0-9]+/g, '-')
+                    .replace(/^-+|-+$/g, '');
+            }
+
+            function buildImagePath(raw) {
+                if (!raw) return null;
+                var safeName = String(raw).replace(/[\\\/:]/g, '_').trim();
+                if (!safeName) return null;
+                return 'images/' + safeName;
+            }
+
+            function splitProjects(projects) {
+                if (!projects) return [];
+                return String(projects)
+                    .split(',')
+                    .map(function (p) { return p.trim(); })
+                    .filter(Boolean);
+            }
+
+            function setTextOrHide(el, value, fallback) {
+                if (!el) return;
+                if (value) {
+                    el.textContent = value;
+                    el.style.display = '';
+                } else if (fallback) {
+                    el.textContent = fallback;
+                    el.style.display = '';
+                } else {
+                    el.style.display = 'none';
+                }
+            }
+
+            if (!siteParam) {
+                loadingEl.classList.add('hidden');
+                emptyEl.classList.remove('hidden');
+                return;
+            }
+
+            if (!window.json_ICBCSites_6 || !Array.isArray(window.json_ICBCSites_6.features)) {
+                loadingEl.classList.add('hidden');
+                emptyEl.classList.remove('hidden');
+                return;
+            }
+
+            var wanted = normaliseName(siteParam);
+            var feature = window.json_ICBCSites_6.features.find(function (f) {
+                if (!f || !f.properties) return false;
+                return normaliseName(f.properties['Site Name']) === wanted;
+            });
+
+            if (!feature) {
+                loadingEl.classList.add('hidden');
+                emptyEl.classList.remove('hidden');
+                return;
+            }
+
+            var props = feature.properties || {};
+            var heroImage = buildImagePath(props['Photo']);
+
+            if (heroImage) {
+                heroImageEl.src = heroImage;
+                heroImageEl.alt = (props['Site Name'] || 'ICBC Site') + ' site panorama';
+                heroImageEl.style.display = '';
+            } else {
+                heroImageEl.style.display = 'none';
+            }
+
+            setTextOrHide(heroTitleEl, props['Site Name'], 'ICBC Site');
+            setTextOrHide(heroRegionEl, props['Region'] || 'Region');
+
+            var year = props['Year Constructed'] || '';
+            var preSchool = props['PreSchool'] || '';
+            var water = props['Water Source'] || '';
+
+            heroYearEl.textContent = year ? 'Constructed · ' + year : '';
+            heroWaterEl.textContent = water ? 'Water · ' + water : '';
+
+            var snapshotFragments = [];
+
+            if (year) {
+                snapshotFragments.push(
+                    '<div><div class="grid-item-label">Year constructed</div><div class="grid-item-value">' +
+                    year +
+                    '</div></div>'
+                );
+            }
+
+            if (props['Region']) {
+                snapshotFragments.push(
+                    '<div><div class="grid-item-label">Region</div><div class="grid-item-value">' +
+                    props['Region'] +
+                    '</div></div>'
+                );
+            }
+
+            if (water) {
+                snapshotFragments.push(
+                    '<div><div class="grid-item-label">Water source</div><div class="grid-item-value">' +
+                    water +
+                    '</div></div>'
+                );
+            }
+
+            if (preSchool) {
+                snapshotFragments.push(
+                    '<div><div class="grid-item-label">PreSchool</div><div class="grid-item-value">' +
+                    preSchool +
+                    '</div></div>'
+                );
+            }
+
+            if (props['Ploughing Season'] || props['Area Ploughed']) {
+                snapshotFragments.push(
+                    '<div><div class="grid-item-label">Ploughing</div><div class="grid-item-value">' +
+                    (props['Ploughing Season'] || '') +
+                    (props['Area Ploughed'] ? ' · ' + props['Area Ploughed'] : '') +
+                    '</div></div>'
+                );
+            }
+
+            snapshotGridEl.innerHTML = snapshotFragments.join('');
+
+            var pastorHtml = '';
+            var pastorImagePath = buildImagePath(props['Pastors Photo']);
+
+            if (props['Pastor'] || pastorImagePath) {
+                pastorHtml += '<div class="section-label">Local pastor</div>';
+                pastorHtml += '<div class="pastor-shell">';
+
+                if (pastorImagePath) {
+                    pastorHtml +=
+                        '<img class="pastor-img-circle" src="' +
+                        pastorImagePath +
+                        '" alt="Pastor at ' +
+                        (props['Site Name'] || 'ICBC Site') +
+                        '">';
+                }
+
+                pastorHtml += '<div>';
+
+                if (props['Pastor']) {
+                    pastorHtml += '<div class="pastor-name">' + props['Pastor'] + '</div>';
+                    pastorHtml += '<div class="pastor-role">ICBC Site Pastor</div>';
+                }
+
+                if (preSchool) {
+                    pastorHtml +=
+                        '<div class="pastor-meta">PreSchool · ' + preSchool + '</div>';
+                }
+
+                if (props['Region']) {
+                    pastorHtml +=
+                        '<div class="pastor-meta">Region · ' + props['Region'] + '</div>';
+                }
+
+                pastorHtml += '</div></div>';
+            }
+
+            var projectPills = splitProjects(props['Projects']);
+            if (projectPills.length) {
+                pastorHtml += '<div class="section-label" style="margin-top:18px;">Key projects</div>';
+                pastorHtml += '<div class="pill-row">';
+                projectPills.forEach(function (p) {
+                    pastorHtml += '<span class="pill">' + p + '</span>';
+                });
+                pastorHtml += '</div>';
+            }
+
+            if (!pastorHtml) {
+                pastorHtml =
+                    '<div class="section-label">Local pastor</div><p class="about-body">Pastor details for this ICBC will appear here.</p>';
+            }
+
+            pastorShellEl.innerHTML = pastorHtml;
+
+            var aboutHtml = '<div class="section-label">Story & impact</div>';
+
+            if (props['About']) {
+                aboutHtml += '<div class="about-body">' + props['About'] + '</div>';
+            } else {
+                aboutHtml +=
+                    '<p class="about-body">A narrative of this ICBC site will appear here as content is added.</p>';
+            }
+
+            var anyPloughStat =
+                props['Ploughing Season'] ||
+                props['Hours Ploughed'] ||
+                props['Families Ploughed for'] ||
+                props['Area Ploughed'];
+
+            if (anyPloughStat) {
+                aboutHtml += '<div class="stat-row">';
+
+                if (props['Ploughing Season']) {
+                    aboutHtml +=
+                        '<div class="stat-pill"><span class="stat-pill-label">Season</span><span class="stat-pill-value">' +
+                        props['Ploughing Season'] +
+                        '</span></div>';
+                }
+
+                if (props['Hours Ploughed']) {
+                    aboutHtml +=
+                        '<div class="stat-pill"><span class="stat-pill-label">Hours ploughed</span><span class="stat-pill-value">' +
+                        props['Hours Ploughed'] +
+                        '</span></div>';
+                }
+
+                if (props['Families Ploughed for']) {
+                    aboutHtml +=
+                        '<div class="stat-pill"><span class="stat-pill-label">Families</span><span class="stat-pill-value">' +
+                        props['Families Ploughed for'] +
+                        '</span></div>';
+                }
+
+                if (props['Area Ploughed']) {
+                    aboutHtml +=
+                        '<div class="stat-pill"><span class="stat-pill-label">Area</span><span class="stat-pill-value">' +
+                        props['Area Ploughed'] +
+                        '</span></div>';
+                }
+
+                aboutHtml += '</div>';
+            }
+
+            aboutHtml += '<div class="button-row">';
+
+            if (props['Site Link']) {
+                aboutHtml +=
+                    '<a href="' +
+                    props['Site Link'] +
+                    '" target="_blank" class="btn btn-primary">Watch ICBC videos</a>';
+            }
+
+            aboutHtml +=
+                '<a href="cms-overview.html" target="_blank" class="btn btn-outline">Network-wide CMS & ICBC stats</a>';
+
+            aboutHtml += '</div>';
+
+            // Placeholder for stats summary from Django API
+            aboutHtml += '<div id="stats-shell"></div>';
+
+            aboutShellEl.innerHTML = aboutHtml;
+
+            // Load stats summary from the Django API, if available
+            (function loadStatsFromApi() {
+                var statsShell = document.getElementById('stats-shell');
+                if (!statsShell || !props['Site Name']) {
+                    return;
+                }
+
+                var slug = slugifyForApi(props['Site Name']);
+                if (!slug) {
+                    return;
+                }
+
+                // Adjust this base URL if your API is hosted elsewhere.
+                var API_BASE = 'http://127.0.0.1:8000';
+                var url = API_BASE + '/api/icbc/sites/' + encodeURIComponent(slug) + '/';
+
+                statsShell.innerHTML = '<div class="state-body">Loading weekly stats…</div>';
+
+                fetch(url)
+                    .then(function (res) {
+                        if (!res.ok) {
+                            throw new Error('HTTP ' + res.status);
+                        }
+                        return res.json();
+                    })
+                    .then(function (data) {
+                        var summary = data.stats_summary;
+                        if (!summary) {
+                            statsShell.innerHTML =
+                                '<div class="state-body">Weekly statistics will appear here once they are recorded for this ICBC.</div>';
+                            return;
+                        }
+
+                        var html = '';
+                        html += '<div class="section-label" style="margin-top:18px;">Stats overview</div>';
+                        html += '<div class="stats-shell">';
+
+                        // Average Sunday
+                        html += '<div class="stats-card">';
+                        html += '<div class="stats-title">Average Sunday</div>';
+                        html += '<div class="stats-kpi-row">';
+                        html +=
+                            '<div class="stats-kpi"><div class="stats-kpi-label">Total attendance</div><div class="stats-kpi-value">' +
+                            (summary.avg_total_attendance || 0) +
+                            '</div></div>';
+                        html +=
+                            '<div class="stats-kpi"><div class="stats-kpi-label">Children</div><div class="stats-kpi-value">' +
+                            (summary.avg_children || 0) +
+                            '</div></div>';
+                        html +=
+                            '<div class="stats-kpi"><div class="stats-kpi-label">Preschool (avg)</div><div class="stats-kpi-value">' +
+                            (summary.avg_preschool || 0) +
+                            '</div></div>';
+                        html +=
+                            '<div class="stats-kpi"><div class="stats-kpi-label">Sundays recorded</div><div class="stats-kpi-value">' +
+                            (summary.sundays_recorded || 0) +
+                            '</div></div>';
+                        html += '</div>';
+                        html += '<div class="stats-note">Averages are per recorded Sunday.</div>';
+                        html += '</div>';
+
+                        // Cumulative impact
+                        html += '<div class="stats-card">';
+                        html += '<div class="stats-title">Cumulative impact</div>';
+                        html += '<div class="stats-kpi-row">';
+                        html +=
+                            '<div class="stats-kpi"><div class="stats-kpi-label">Salvations</div><div class="stats-kpi-value">' +
+                            (summary.total_salvations || 0) +
+                            '</div></div>';
+                        html +=
+                            '<div class="stats-kpi"><div class="stats-kpi-label">Baptisms</div><div class="stats-kpi-value">' +
+                            (summary.total_baptisms || 0) +
+                            '</div></div>';
+                        html +=
+                            '<div class="stats-kpi"><div class="stats-kpi-label">Home visits</div><div class="stats-kpi-value">' +
+                            (summary.total_home_visits || 0) +
+                            '</div></div>';
+                        html +=
+                            '<div class="stats-kpi"><div class="stats-kpi-label">Meals / food packs</div><div class="stats-kpi-value">' +
+                            (summary.total_meals || 0) +
+                            '</div></div>';
+                        html +=
+                            '<div class="stats-kpi"><div class="stats-kpi-label">Preschool children impacted</div><div class="stats-kpi-value">' +
+                            (summary.total_preschool_attendance || 0) +
+                            '</div></div>';
+                        html += '</div>';
+                        html += '</div>';
+
+                        html += '</div>';
+
+                        statsShell.innerHTML = html;
+                    })
+                    .catch(function (err) {
+                        console.error('Error loading stats summary', err);
+                        statsShell.innerHTML = '';
+                    });
+            })();
+
+            loadingEl.classList.add('hidden');
+            emptyEl.classList.add('hidden');
+            mainEl.classList.remove('hidden');
+        })();
+        </script>
+    </body>
+</html>
+

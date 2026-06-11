@@ -1,0 +1,1 @@
+See SUPABASE_IMPORT.md for the full normalized import checklist.

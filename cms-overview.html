@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>ICBC – CMS Overview</title>
+        <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background: radial-gradient(circle at top left, #020617 0%, #020617 50%, #000000 100%);
+            color: #e5e7eb;
+            min-height: 100vh;
+        }
+
+        .shell {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 24px 16px 40px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 14px;
+            background: radial-gradient(circle at 30% 30%, #fecaca 0%, #b91c1c 50%, #020617 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 12px 30px rgba(248,113,113,0.4);
+        }
+
+        .logo img {
+            width: 24px;
+            height: 24px;
+        }
+
+        .title-main {
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .title-sub {
+            font-size: 13px;
+            color: #9ca3af;
+        }
+
+        .pill {
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: rgba(15,23,42,0.9);
+            border: 1px solid rgba(148,163,184,0.5);
+            font-size: 11px;
+            color: #e5e7eb;
+        }
+
+        .grid-main {
+            display: grid;
+            grid-template-columns: minmax(0, 1.8fr) minmax(0, 1.6fr);
+            gap: 18px;
+            margin-top: 8px;
+        }
+
+        .card {
+            border-radius: 18px;
+            padding: 18px 18px 20px;
+            background: radial-gradient(circle at top left, #020617 0%, #020617 25%, #020617 100%);
+            border: 1px solid rgba(148,163,184,0.4);
+            box-shadow: 0 20px 60px rgba(15,23,42,1);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .card-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            color: #9ca3af;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px 18px;
+        }
+
+        .kpi {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .kpi-label {
+            font-size: 11px;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+        }
+
+        .kpi-value {
+            font-size: 20px;
+            font-weight: 600;
+            color: #e5e7eb;
+        }
+
+        .kpi-note {
+            font-size: 11px;
+            color: #6b7280;
+            margin-top: 8px;
+        }
+
+        .section-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            color: #9ca3af;
+            margin-bottom: 12px;
+        }
+
+        .grid-secondary {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .sub-card {
+            border-radius: 14px;
+            padding: 12px 14px;
+            background: rgba(15,23,42,0.95);
+            border: 1px solid rgba(148,163,184,0.45);
+        }
+
+        .sub-title {
+            font-size: 12px;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            margin-bottom: 8px;
+        }
+
+        .sub-main {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .sub-sub {
+            font-size: 11px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        footer {
+            margin-top: 28px;
+            font-size: 11px;
+            color: #6b7280;
+            text-align: center;
+        }
+
+        @media (max-width: 800px) {
+            .grid-main {
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
+        </style>
+    </head>
+    <body>
+        <div class="shell">
+            <header class="header">
+                <div class="header-left">
+                    <div class="logo">
+                        <img src="markers/flames.svg" alt="ICBC" />
+                    </div>
+                    <div>
+                        <div class="title-main">ICBC Eswatini</div>
+                        <div class="title-sub">Challenge Ministries overview</div>
+                    </div>
+                </div>
+                <div class="pill">Network-wide statistics</div>
+            </header>
+
+            <main>
+                <section class="grid-main" id="cms-grid">
+                    <!-- Filled by script -->
+                </section>
+                <footer>
+                    © <span id="year-footer"></span> ICBC Eswatini · Challenge Ministries Swaziland
+                </footer>
+            </main>
+        </div>
+
+        <script>
+        (function () {
+            document.getElementById('year-footer').textContent = new Date().getFullYear();
+            var grid = document.getElementById('cms-grid');
+            if (!grid) return;
+
+            grid.innerHTML = '<div class="card"><div class="section-title">Loading overview…</div></div>';
+
+            var API_BASE = 'http://127.0.0.1:8000';
+            fetch(API_BASE + '/api/icbc/summary/')
+                .then(function (res) {
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    return res.json();
+                })
+                .then(function (data) {
+                    var html = '';
+
+                    // Left: core ICBC & church impact
+                    html += '<article class="card">';
+                    html += '<div class="card-header">';
+                    html += '<div class="card-title">ICBC network impact</div>';
+                    html += '</div>';
+                    html += '<div class="kpi-grid">';
+                    html += '<div class="kpi"><div class="kpi-label">Active ICBC sites</div><div class="kpi-value">' + (data.total_icbcs || 0) + '</div></div>';
+                    html += '<div class="kpi"><div class="kpi-label">Total attendance recorded</div><div class="kpi-value">' + (data.total_attendance || 0).toLocaleString() + '</div></div>';
+                    html += '<div class="kpi"><div class="kpi-label">Preschool children impacted</div><div class="kpi-value">' + (data.total_preschool_children_impacted || 0).toLocaleString() + '</div></div>';
+                    html += '<div class="kpi"><div class="kpi-label">Salvations</div><div class="kpi-value">' + (data.total_salvations || 0).toLocaleString() + '</div></div>';
+                    html += '<div class="kpi"><div class="kpi-label">Baptisms</div><div class="kpi-value">' + (data.total_baptisms || 0).toLocaleString() + '</div></div>';
+                    html += '<div class="kpi"><div class="kpi-label">Home visits</div><div class="kpi-value">' + (data.total_home_visits || 0).toLocaleString() + '</div></div>';
+                    html += '</div>';
+                    html += '<div class="kpi-note">Figures aggregate all uploaded church statistics.</div>';
+                    html += '</article>';
+
+                    // Right: agriculture & food security
+                    html += '<article class="card">';
+                    html += '<div class="card-header">';
+                    html += '<div class="card-title">Agriculture & food security</div>';
+                    html += '</div>';
+                    html += '<div class="grid-secondary">';
+
+                    html += '<div class="sub-card">';
+                    html += '<div class="sub-title">Ploughing</div>';
+                    html += '<div class="sub-main">' + (data.total_plough_hours || 0) + ' hrs · ' + (data.total_plough_hectares || 0) + ' ha</div>';
+                    html += '<div class="sub-sub">Families impacted: ' + (data.total_plough_families || 0).toLocaleString() + '</div>';
+                    html += '</div>';
+
+                    html += '<div class="sub-card">';
+                    html += '<div class="sub-title">Maize buy-back programme</div>';
+                    html += '<div class="sub-main">' + (data.total_maize_tonnes || 0) + ' tonnes</div>';
+                    html += '<div class="sub-sub">Farmers supported: ' + (data.total_maize_farmers || 0).toLocaleString() + '</div>';
+                    html += '</div>';
+
+                    html += '</div>';
+                    html += '</article>';
+
+                    grid.innerHTML = html;
+                })
+                .catch(function (err) {
+                    console.error('Error loading CMS overview', err);
+                    grid.innerHTML = '<article class="card"><div class="section-title">Overview unavailable</div><p class="kpi-note">The network summary could not be loaded. Try again later.</p></article>';
+                });
+        })();
+        </script>
+    </body>
+</html>
+
