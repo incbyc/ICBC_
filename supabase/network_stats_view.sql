@@ -6,7 +6,7 @@
 create or replace view public.icbc_network_stats_summary as
 with weekly as (
     select
-        count(*) filter (where w.total_attendance > 0)::integer as sundays_recorded,
+        count(distinct w.stat_date) filter (where w.total_attendance > 0)::integer as sundays_recorded,
         round(avg(w.total_attendance) filter (where w.total_attendance > 0)::numeric, 1) as avg_attendance,
         coalesce(sum(w.salvations), 0)::integer as total_salvations,
         coalesce(sum(w.baptisms), 0)::integer as total_baptisms,

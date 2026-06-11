@@ -2910,6 +2910,33 @@
                 padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
             }
 
+            .sidebar-action-bar {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+            }
+
+            .sidebar-action-coords {
+                width: 100%;
+            }
+
+            .sidebar-action-buttons {
+                width: 100%;
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .sidebar-btn-nav {
+                width: 100%;
+                box-sizing: border-box;
+            }
+
+            .sidebar-header.cms img.sidebar-logo {
+                width: 56px;
+                height: 56px;
+                padding: 8px;
+            }
+
             .sidebar-backdrop {
                 left: 0;
                 pointer-events: none;
@@ -4378,7 +4405,10 @@
             return Promise.all([
                 supabaseRestWithTimeout('icbc_sites?select=slug,latitude,longitude'),
                 supabaseRestWithTimeout(
-                    'icbc_site_stats_summary?select=sundays_recorded,avg_attendance,total_salvations,total_baptisms,total_home_visits'
+                    'icbc_site_stats_summary?select=avg_attendance,total_salvations,total_baptisms,total_home_visits'
+                ).catch(function () { return []; }),
+                supabaseRestWithTimeout(
+                    'weekly_stats?select=stat_date,total_attendance'
                 ).catch(function () { return []; }),
                 supabaseRestWithTimeout('ploughing_records?select=hours_ploughed,families_impacted,hectares_ploughed'),
                 supabaseRestWithTimeout('maize_buyback_records?select=kilograms_bought,farmers_impacted'),
@@ -4387,23 +4417,26 @@
             ]).then(function (results) {
                 var sites = results[0] || [];
                 var siteStats = results[1] || [];
-                var plough = results[2] || [];
-                var maize = results[3] || [];
-                var preschool = results[4] || [];
-                var staffCount = Number(results[5]) || 0;
+                var weeklyRows = results[2] || [];
+                var plough = results[3] || [];
+                var maize = results[4] || [];
+                var preschool = results[5] || [];
+                var staffCount = Number(results[6]) || 0;
 
+                var sundayDates = {};
                 var attendanceWeightedSum = 0;
                 var attendanceCount = 0;
                 var salvations = 0;
                 var baptisms = 0;
                 var homeVisits = 0;
+                weeklyRows.forEach(function (row) {
+                    var attendance = Number(row.total_attendance) || 0;
+                    if (attendance <= 0 || !row.stat_date) return;
+                    sundayDates[row.stat_date] = true;
+                    attendanceCount += 1;
+                    attendanceWeightedSum += attendance;
+                });
                 siteStats.forEach(function (row) {
-                    var sundays = Number(row.sundays_recorded) || 0;
-                    var avg = Number(row.avg_attendance) || 0;
-                    if (sundays > 0) {
-                        attendanceCount += sundays;
-                        if (avg > 0) attendanceWeightedSum += avg * sundays;
-                    }
                     salvations += Number(row.total_salvations) || 0;
                     baptisms += Number(row.total_baptisms) || 0;
                     homeVisits += Number(row.total_home_visits) || 0;
@@ -4440,7 +4473,7 @@
                 return {
                     icbc_sites_planted: sites.length,
                     icbc_sites_mapped: mapped,
-                    sundays_recorded: attendanceCount,
+                    sundays_recorded: Object.keys(sundayDates).length,
                     avg_attendance: attendanceCount ? attendanceWeightedSum / attendanceCount : null,
                     total_salvations: salvations,
                     total_baptisms: baptisms,
