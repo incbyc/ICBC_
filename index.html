@@ -2094,6 +2094,12 @@
             border-top: 1px solid #e8eaed;
         }
 
+        .icbc-sidebar-video-wrap {
+            margin-top: 0;
+            border-top: none;
+            border-bottom: 1px solid #e8eaed;
+        }
+
         .cms-sidebar-video-wrap {
             margin-top: 0;
             border-top: none;
@@ -2989,6 +2995,7 @@
                 <div id="sidebarHeaderTop" class="sidebar-header-top"></div>
             </div>
             <div id="sidebarActionBar" class="sidebar-action-bar" aria-label="Site actions"></div>
+            <div id="sidebarVideoWrap" class="sidebar-video-wrap icbc-sidebar-video-wrap"></div>
             <div id="sidebarBody" class="sidebar-body"></div>
             <button type="button" class="sidebar-expand-btn" id="sidebarExpandBtn"
                 aria-label="Expand panel" aria-expanded="false" aria-controls="sidebarBody">
@@ -3624,6 +3631,7 @@
         function openSiteSidebar(kind, props, layer) {
             setSidebarExpanded(false);
             setSidebarSiteKind(kind);
+            clearSidebarVideo();
             var siteName = props['Site Name'] || props['Site'] || (kind === 'cms' ? 'Challenge Ministries' : 'Site');
             if (kind === 'cms') siteName = 'Challenge Ministries';
             var region = props['Region'] || '';
@@ -3662,8 +3670,7 @@
                     '<div id="sidebarSiteTop"></div>' +
                     '<div id="sidebarStaffSection" class="sidebar-staff-section"></div>' +
                     '<div id="sidebarDashboard" class="sidebar-dashboard"></div>' +
-                    '</div></div>' +
-                    '<div id="sidebarVideoWrap" class="sidebar-video-wrap"></div>';
+                    '</div></div>';
 
                 actionsHtml = directionsBtn;
 
@@ -3675,6 +3682,7 @@
                 sidebarBody.innerHTML = bodyHtml + renderSidebarFooterHint();
                 sidebarBody.dataset.pastorPhoto = pastorPhoto || '';
                 sidebarBody.dataset.pastorName = props['Pastor'] || '';
+                renderSidebarMedia(props['Site Link'] || '', '');
 
                 var localDashboard = buildDashboardFromProps(
                     props,
@@ -5101,7 +5109,8 @@
 
                     renderSidebarDashboard(mergeDashboardWithSupabase(localDashboard, data, slug));
 
-                    var videoUrl = data.site && data.site.video_url;
+                    var videoUrl = (data.site && data.site.video_url) ||
+                        (data.site && data.site.site_link) || '';
                     var coverUrl = data.site && data.site.cover_image_url;
                     renderSidebarMedia(videoUrl, coverUrl);
 
