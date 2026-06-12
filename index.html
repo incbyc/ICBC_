@@ -744,6 +744,20 @@
             gap: 16px;
         }
 
+        .site-sidebar.expanded .cms-dash-hero-stat .val {
+            font-size: 32px;
+        }
+
+        .site-sidebar.expanded .cms-dash-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+            padding: 12px;
+        }
+
+        .site-sidebar.expanded .cms-dash-stat-val {
+            font-size: 20px;
+        }
+
         .cms-dash-section {
             border-radius: 12px;
             overflow: hidden;
@@ -1595,7 +1609,8 @@
         }
 
         @media (min-width: 769px) {
-            .site-sidebar.icbc.open .sidebar-expand-btn {
+            .site-sidebar.icbc.open .sidebar-expand-btn,
+            .site-sidebar.cms.open .sidebar-expand-btn {
                 display: flex;
             }
         }
@@ -2077,6 +2092,12 @@
             flex-shrink: 0;
             margin-top: 8px;
             border-top: 1px solid #e8eaed;
+        }
+
+        .cms-sidebar-video-wrap {
+            margin-top: 0;
+            border-top: none;
+            border-bottom: 1px solid #e8eaed;
         }
 
         .sidebar-video-wrap:empty {
@@ -3003,6 +3024,7 @@
         <script src="data/CMS_5.js"></script>
         <script src="data/ICBCSites_6.js"></script>
         <script src="data/HomeSites.js"></script>
+        <script src="data/icbc_teachers.js"></script>
         <script>
         var highlightLayer;
         function highlightFeature(e) {
@@ -3033,6 +3055,8 @@
         }).addTo(map);
 
         var SUPABASE_URL = 'https://oalwyosxclspdkwmivfb.supabase.co';
+        var CMS_SIDEBAR_VIDEO_URL =
+            'https://www.youtube.com/watch?v=_FwCSa3g1n8&list=PLuBdohRrAcEUF-Vpi6jmoG_I4rDlapZ_i&index=12';
         var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9hbHd5b3N4Y2xzcGRrd21pdmZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4NzQxNDEsImV4cCI6MjA5NTQ1MDE0MX0.qn2-ZaSx1J7N8mOpILvPbFAxGB1en5Qaff70WK1TJYA';
 
         function supabaseHeaders() {
@@ -3415,7 +3439,7 @@
             } else if (kind === 'bubele') {
                 sidebarEl.classList.add('bubele');
             }
-            if (kind !== 'icbc') {
+            if (kind !== 'icbc' && kind !== 'cms') {
                 setSidebarExpanded(false);
             }
         }
@@ -3543,8 +3567,8 @@
             return true;
         }
 
-        function renderSidebarVideo(videoUrl) {
-            var wrap = document.getElementById('sidebarVideoWrap');
+        function renderSidebarVideo(videoUrl, wrapId, iframeTitle) {
+            var wrap = document.getElementById(wrapId || 'sidebarVideoWrap');
             if (!wrap) return false;
             var videoId = extractYouTubeVideoId(videoUrl);
             if (!videoId) {
@@ -3561,7 +3585,7 @@
             var src = buildYouTubeEmbedSrc(videoId);
             var watchUrl = buildYouTubeWatchUrl(videoId);
             wrap.innerHTML = '<div class="sidebar-video-frame">' +
-                '<iframe src="' + escapeHtml(src) + '" title="Site video" ' +
+                '<iframe src="' + escapeHtml(src) + '" title="' + escapeHtml(iframeTitle || 'Site video') + '" ' +
                 'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" ' +
                 'referrerpolicy="origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>' +
                 '<div class="sidebar-video-fallback-bar">' +
@@ -3675,6 +3699,7 @@
                 enrichSidebarFromApi(props._slug || slugifyForApi(props['Site Name']), localDashboard);
             } else if (kind === 'cms') {
                 bodyHtml +=
+                    '<div id="cmsSidebarVideoWrap" class="sidebar-video-wrap cms-sidebar-video-wrap"></div>' +
                     '<div class="sidebar-panel-inner cms-panel">' +
                     '<div class="sidebar-sheet cms-sheet">' +
                     '<section id="cmsNetworkImpact" class="sidebar-block cms-network-block">' +
@@ -3692,6 +3717,11 @@
                     actionsHtml
                 );
                 sidebarBody.innerHTML = bodyHtml + renderSidebarFooterHint();
+                renderSidebarVideo(
+                    CMS_SIDEBAR_VIDEO_URL,
+                    'cmsSidebarVideoWrap',
+                    'Challenge Ministries video'
+                );
                 loadCmsNetworkImpact();
             } else {
                 var familyCode = props['Family Code'] || 'N/A';
@@ -3867,7 +3897,8 @@
                     '<p class="sidebar-staff-name">' + escapeHtml(name) +
                     ' <span class="sidebar-staff-role">· ' + escapeHtml(role) + '</span></p>';
                 if (person.description) {
-                    html += '<p class="sidebar-staff-desc">' + escapeHtml(person.description) + '</p>';
+                    html += '<p class="sidebar-staff-desc">' +
+                        escapeHtml(stripStaffContactFromDescription(person.description)) + '</p>';
                 }
                 html += '</div></article>';
             });
@@ -3986,6 +4017,76 @@
             return String(role || '').trim().toLowerCase() === 'teacher';
         }
 
+        function normalizePersonName(name) {
+            return String(name || '').trim().toLowerCase().replace(/\s+/g, ' ');
+        }
+
+        function stripStaffContactFromDescription(text) {
+            if (!text) return '';
+            return String(text)
+                .replace(/\s*Contact:\s*[^.]+/gi, '')
+                .replace(/\s+/g, ' ')
+                .replace(/\s+\./g, '.')
+                .trim();
+        }
+
+        function getTeacherRollupForSite(siteSlug) {
+            if (!siteSlug || typeof ICBC_TEACHERS_BY_SITE === 'undefined') return 0;
+            var entry = ICBC_TEACHERS_BY_SITE[siteSlug];
+            if (!entry) return 0;
+            if (entry.count != null) return Number(entry.count) || 0;
+            return (entry.teachers && entry.teachers.length) || 0;
+        }
+
+        function getNetworkTeacherRollupFromSpreadsheet() {
+            if (typeof ICBC_TEACHERS_BY_SITE === 'undefined') {
+                return { total_teachers: 0, current_teachers: 0, sites_with_teachers: 0 };
+            }
+            var currentTeachers = 0;
+            var sitesWithTeachers = 0;
+            Object.keys(ICBC_TEACHERS_BY_SITE).forEach(function (slug) {
+                var count = getTeacherRollupForSite(slug);
+                if (count > 0) {
+                    currentTeachers += count;
+                    sitesWithTeachers += 1;
+                }
+            });
+            return {
+                total_teachers: typeof ICBC_TEACHERS_TOTAL !== 'undefined'
+                    ? Number(ICBC_TEACHERS_TOTAL) || currentTeachers
+                    : currentTeachers,
+                current_teachers: currentTeachers,
+                sites_with_teachers: sitesWithTeachers
+            };
+        }
+
+        function computeNetworkStaffTotal(staffRows, preschoolTeachers) {
+            var pastors = 0;
+            var compassionateCare = 0;
+            var teachersInStaff = 0;
+            (staffRows || []).forEach(function (row) {
+                var role = String(row.role || '');
+                if (role === 'Pastor') pastors += 1;
+                else if (role === 'Compassionate Care') compassionateCare += 1;
+                else if (role === 'Teacher') teachersInStaff += 1;
+            });
+            var rollup = getNetworkTeacherRollupFromSpreadsheet();
+            var teachers = Math.max(
+                Number(preschoolTeachers) || 0,
+                rollup.current_teachers || 0,
+                teachersInStaff
+            );
+            return pastors + compassionateCare + teachers;
+        }
+
+        function filterSpreadsheetOnlyTeachers(staffList) {
+            return (staffList || []).filter(function (person) {
+                if (!isTeacherRole(person.role)) return true;
+                var desc = String(person.description || '').trim();
+                return !/^Pre-school teacher at .+ ICBC\.$/.test(desc);
+            });
+        }
+
         function countStaffTeachers(staffList) {
             var count = 0;
             (staffList || []).forEach(function (person) {
@@ -4005,7 +4106,9 @@
             return bySite;
         }
 
-        function resolvePreschoolTeacherCount(enrollmentCount, staffListOrCount) {
+        function resolvePreschoolTeacherCount(enrollmentCount, staffListOrCount, siteSlug) {
+            var fromSheet = siteSlug ? getTeacherRollupForSite(siteSlug) : 0;
+            if (fromSheet > 0) return fromSheet;
             var fromStaff = typeof staffListOrCount === 'number'
                 ? staffListOrCount
                 : countStaffTeachers(staffListOrCount);
@@ -4018,15 +4121,19 @@
         }
 
         function aggregateNetworkPreschoolDetailed() {
+            var teacherRollup = getNetworkTeacherRollupFromSpreadsheet();
             return Promise.all([
                 supabaseRestWithTimeout(
-                    'preschool_enrollment?select=site_id,year,children_count,teachers_count'
+                    'preschool_enrollment?select=site_id,year,children_count'
                 ),
-                supabaseRestWithTimeout('staff?select=site_id,role&role=eq.Teacher')
+                supabaseRestWithTimeout('icbc_sites?select=id,slug')
                     .catch(function () { return []; })
             ]).then(function (results) {
                 var rows = results[0] || [];
-                var staffTeachersBySite = buildStaffTeachersBySiteId(results[1] || []);
+                var siteIdToSlug = {};
+                (results[1] || []).forEach(function (site) {
+                    if (site.id && site.slug) siteIdToSlug[site.id] = site.slug;
+                });
                 var bySite = {};
                 (rows || []).forEach(function (row) {
                     var sid = row.site_id;
@@ -4037,7 +4144,6 @@
 
                 var previousYearsEnrollment = 0;
                 var currentChildren = 0;
-                var currentTeachers = 0;
                 var sitesWithPreschool = 0;
 
                 Object.keys(bySite).forEach(function (sid) {
@@ -4050,7 +4156,6 @@
                     var maxYear = Math.max.apply(null, siteRows.map(function (r) {
                         return Number(r.year) || 0;
                     }));
-                    var enrollmentTeachersCurrentYear = null;
                     siteRows.forEach(function (row) {
                         var year = Number(row.year) || 0;
                         var children = Number(row.children_count) || 0;
@@ -4058,14 +4163,8 @@
                             previousYearsEnrollment += children;
                         } else if (year === maxYear) {
                             currentChildren += children;
-                            enrollmentTeachersCurrentYear = row.teachers_count;
                         }
                     });
-                    var siteTeachers = resolvePreschoolTeacherCount(
-                        enrollmentTeachersCurrentYear,
-                        staffTeachersBySite[sid] || 0
-                    );
-                    if (siteTeachers != null) currentTeachers += siteTeachers;
                 });
 
                 var minYear = null;
@@ -4080,7 +4179,9 @@
                 return {
                     previous_years_enrollment: previousYearsEnrollment,
                     current_children: currentChildren,
-                    current_teachers: currentTeachers,
+                    current_teachers: teacherRollup.current_teachers,
+                    total_teachers: teacherRollup.total_teachers,
+                    sites_with_teachers: teacherRollup.sites_with_teachers,
                     sites_with_preschool: sitesWithPreschool,
                     current_year: maxYear,
                     min_year: minYear,
@@ -4322,7 +4423,6 @@
                 'theme-worship',
                 worshipPeriod,
                 cmsDashStat('fa-users', 'Avg attendance', formatMetricValue(s.avg_attendance, 1), avgHint) +
-                cmsDashStat('fa-calendar-check', 'Sundays recorded', formatMetricValue(s.sundays_recorded)) +
                 cmsDashStat('fa-heart', 'Salvations', formatMetricValue(s.total_salvations)) +
                 cmsDashStat('fa-water', 'Baptisms', formatMetricValue(s.total_baptisms)) +
                 cmsDashStat('fa-home', 'Home visits', formatMetricValue(s.total_home_visits))
@@ -4413,7 +4513,7 @@
                 supabaseRestWithTimeout('ploughing_records?select=hours_ploughed,families_impacted,hectares_ploughed'),
                 supabaseRestWithTimeout('maize_buyback_records?select=kilograms_bought,farmers_impacted'),
                 supabaseRestWithTimeout('preschool_enrollment?select=children_count'),
-                supabaseCount('staff?select=id&limit=0')
+                supabaseRestWithTimeout('staff?select=role').catch(function () { return []; })
             ]).then(function (results) {
                 var sites = results[0] || [];
                 var siteStats = results[1] || [];
@@ -4421,7 +4521,8 @@
                 var plough = results[3] || [];
                 var maize = results[4] || [];
                 var preschool = results[5] || [];
-                var staffCount = Number(results[6]) || 0;
+                var staffRows = results[6] || [];
+                var staffCount = computeNetworkStaffTotal(staffRows);
 
                 var sundayDates = {};
                 var attendanceWeightedSum = 0;
@@ -4470,10 +4571,12 @@
                     if (!isNaN(lat) && !isNaN(lng)) mapped += 1;
                 });
 
+                var weeksRecorded = Object.keys(sundayDates).length;
                 return {
                     icbc_sites_planted: sites.length,
                     icbc_sites_mapped: mapped,
-                    sundays_recorded: Object.keys(sundayDates).length,
+                    weeks_recorded: weeksRecorded,
+                    sundays_recorded: weeksRecorded,
                     avg_attendance: attendanceCount ? attendanceWeightedSum / attendanceCount : null,
                     total_salvations: salvations,
                     total_baptisms: baptisms,
@@ -4499,13 +4602,24 @@
             Promise.all([
                 fetchNetworkStats(),
                 aggregateNetworkPreschoolDetailed().catch(function () { return null; }),
-                fetchCmsStatPeriods().catch(function () { return {}; })
+                fetchCmsStatPeriods().catch(function () { return {}; }),
+                supabaseRestWithTimeout('staff?select=role').catch(function () { return []; })
             ])
                 .then(function (results) {
                     if (loadToken !== cmsNetworkLoadToken) return;
+                    var stats = results[0] || {};
+                    var preschool = results[1];
+                    var periods = results[2];
+                    var staffRows = results[3] || [];
+                    stats = Object.assign({}, stats, {
+                        total_staff: computeNetworkStaffTotal(
+                            staffRows,
+                            preschool && preschool.current_teachers
+                        )
+                    });
                     var heading = root.querySelector('.sidebar-section-head');
                     var headHtml = heading ? heading.outerHTML : '';
-                    root.innerHTML = headHtml + renderCmsNetworkImpactBody(results[0], results[1], results[2]);
+                    root.innerHTML = headHtml + renderCmsNetworkImpactBody(stats, preschool, periods);
                 })
                 .catch(function (err) {
                     if (loadToken !== cmsNetworkLoadToken) return;
@@ -4540,9 +4654,14 @@
             var ps = parsePreschoolFromText(props['PreSchool']);
             if (ps) {
                 var yr = parseInt(props['Ploughing Season'], 10);
+                var propsSlug = props._slug || slugifyForApi(props['Site Name']);
                 dashboard.preschool = {
                     children_count: ps.children_count,
-                    teachers_count: ps.teachers_count,
+                    teachers_count: resolvePreschoolTeacherCount(
+                        ps.teachers_count,
+                        null,
+                        propsSlug
+                    ),
                     year: isNaN(yr) ? null : yr,
                     snapshot_date: null,
                     children_impacted_since_inception: 0,
@@ -4852,7 +4971,7 @@
             };
         }
 
-        function mergeDashboardWithSupabase(localDashboard, data) {
+        function mergeDashboardWithSupabase(localDashboard, data, siteSlug) {
             var dash = cloneDashboard(localDashboard);
             var sidebar = data.sidebar;
             var stats = data.stats;
@@ -4892,7 +5011,8 @@
             if (preAgg) {
                 preAgg.teachers_count = resolvePreschoolTeacherCount(
                     preAgg.teachers_count,
-                    staffList
+                    staffList,
+                    siteSlug
                 );
                 dash.preschool = preAgg;
             }
@@ -4979,9 +5099,13 @@
                     var fallbackPastor = sidebarBody.dataset.pastorName
                         ? { full_name: sidebarBody.dataset.pastorName, role: 'Pastor' }
                         : null;
-                    renderSidebarStaff(data.staffList || [], fallbackPastor, fallbackPhoto);
+                    renderSidebarStaff(
+                        filterSpreadsheetOnlyTeachers(data.staffList || []),
+                        fallbackPastor,
+                        fallbackPhoto
+                    );
 
-                    renderSidebarDashboard(mergeDashboardWithSupabase(localDashboard, data));
+                    renderSidebarDashboard(mergeDashboardWithSupabase(localDashboard, data, slug));
 
                     var videoUrl = data.site && data.site.video_url;
                     var coverUrl = data.site && data.site.cover_image_url;

@@ -1,3 +1,57 @@
+# --- Secrets & local credentials (never commit) ---
 .streamlit/secrets.toml
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+credentials.json
+secrets.json
+config/supabase-local.js
+data/supabase-local.js
+
+# --- Python ---
 __pycache__/
 *.py[cod]
+*$py.class
+.Python
+.venv/
+venv/
+env/
+*.egg-info/
+.eggs/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+
+# --- Node / tooling (if added later) ---
+node_modules/
+
+# --- OS & editor ---
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.code-workspace
+
+# --- OneDrive ---
+~$*
+
+# --- Logs & temp ---
+*.log
+*.tmp
+*.temp
+.cache/
+
+# --- Django local DB (if used) ---
+backend/db.sqlite3
+backend/*.sqlite3
