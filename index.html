@@ -546,7 +546,24 @@
 
         /* ===== LABEL STYLING - Clean & Minimalist ===== */
         .css_ICBCSites_6,
-        .css_CMS_5,
+        .css_CMS_5 {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            font-weight: 500 !important;
+            font-size: 12px !important;
+            color: #202124 !important;
+            text-shadow: 
+                -1px -1px 0 #fff,  
+                1px -1px 0 #fff,
+                -1px 1px 0 #fff,
+                1px 1px 0 #fff,
+                0 0 3px #fff,
+                0 0 5px #fff !important;
+            pointer-events: auto !important;
+            cursor: pointer;
+        }
+
         .css_Roads_4 {
             background: transparent !important;
             border: none !important;
@@ -589,6 +606,8 @@
             text-shadow: none !important;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45) !important;
             backdrop-filter: blur(6px);
+            pointer-events: auto !important;
+            cursor: pointer;
         }
 
         body.map-satellite .leaflet-tooltip.css_Roads_4 {
@@ -1625,7 +1644,10 @@
         }
 
         .sidebar-header.cms {
-            background: linear-gradient(135deg, #00897b 0%, #00695c 100%);
+            background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
+            box-shadow:
+                0 4px 18px rgba(13, 71, 161, 0.35),
+                inset 0 1px 0 rgba(255, 255, 255, 0.14);
         }
 
         .sidebar-header.bubele {
@@ -1653,45 +1675,6 @@
 
         .sidebar-close:hover {
             background: rgba(255, 255, 255, 0.35);
-        }
-
-        .sidebar-mobile-bar {
-            display: none;
-            flex-shrink: 0;
-            align-items: center;
-            padding: calc(10px + env(safe-area-inset-top, 0px)) 12px 10px;
-            background: #ffffff;
-            border-bottom: 1px solid #e8eaed;
-            position: sticky;
-            top: 0;
-            z-index: 5;
-        }
-
-        .sidebar-back-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            border: none;
-            background: transparent;
-            color: #1a73e8;
-            font-size: 16px;
-            font-weight: 600;
-            font-family: inherit;
-            padding: 10px 8px;
-            margin: -6px 0;
-            cursor: pointer;
-            border-radius: 8px;
-            min-height: 44px;
-        }
-
-        .sidebar-back-btn:hover,
-        .sidebar-back-btn:focus {
-            background: #f1f3f4;
-            outline: none;
-        }
-
-        .sidebar-back-btn .fa-arrow-left {
-            font-size: 15px;
         }
 
         .sidebar-header-top {
@@ -2090,20 +2073,13 @@
             width: 100%;
             background: #000;
             flex-shrink: 0;
-            margin-top: 8px;
-            border-top: 1px solid #e8eaed;
-        }
-
-        .icbc-sidebar-video-wrap {
-            margin-top: 0;
-            border-top: none;
             border-bottom: 1px solid #e8eaed;
         }
 
+        .icbc-sidebar-video-wrap,
         .cms-sidebar-video-wrap {
             margin-top: 0;
             border-top: none;
-            border-bottom: 1px solid #e8eaed;
         }
 
         .sidebar-video-wrap:empty {
@@ -2925,12 +2901,20 @@
                 width: 100%;
             }
 
-            .sidebar-mobile-bar {
-                display: flex;
+            .leaflet-control-scale {
+                display: none !important;
+            }
+
+            .sidebar-header {
+                padding-top: calc(14px + env(safe-area-inset-top, 0px));
             }
 
             .sidebar-close {
-                display: none;
+                top: calc(10px + env(safe-area-inset-top, 0px));
+                right: 10px;
+                width: 32px;
+                height: 32px;
+                font-size: 20px;
             }
 
             .site-sidebar .sidebar-body {
@@ -2984,18 +2968,10 @@
 
         <div id="sidebarBackdrop" class="sidebar-backdrop" aria-hidden="true"></div>
         <aside id="siteSidebar" class="site-sidebar" aria-label="Site details">
-            <div class="sidebar-mobile-bar">
-                <button type="button" class="sidebar-back-btn" id="sidebarBackMobile" aria-label="Back to map">
-                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
-                    <span>Cancel</span>
-                </button>
-            </div>
             <div id="sidebarHeader" class="sidebar-header">
                 <button type="button" class="sidebar-close" id="sidebarClose" aria-label="Close panel">&times;</button>
                 <div id="sidebarHeaderTop" class="sidebar-header-top"></div>
             </div>
-            <div id="sidebarActionBar" class="sidebar-action-bar" aria-label="Site actions"></div>
-            <div id="sidebarVideoWrap" class="sidebar-video-wrap icbc-sidebar-video-wrap"></div>
             <div id="sidebarBody" class="sidebar-body"></div>
             <button type="button" class="sidebar-expand-btn" id="sidebarExpandBtn"
                 aria-label="Expand panel" aria-expanded="false" aria-controls="sidebarBody">
@@ -3167,7 +3143,6 @@
         var sidebarBackdrop = document.getElementById('sidebarBackdrop');
         var sidebarHeader = document.getElementById('sidebarHeader');
         var sidebarHeaderTop = document.getElementById('sidebarHeaderTop');
-        var sidebarActionBar = document.getElementById('sidebarActionBar');
         var sidebarBody = document.getElementById('sidebarBody');
 
         function escapeHtml(str) {
@@ -3493,9 +3468,21 @@
             return parts.join('');
         }
 
+        function sidebarActionBarShellHtml() {
+            return '<div id="sidebarActionBar" class="sidebar-action-bar" aria-label="Site actions"></div>';
+        }
+
         function renderSidebarActionBar(lat, lng, buttonsHtml) {
-            if (!sidebarActionBar) return;
-            sidebarActionBar.innerHTML = buildSidebarActionBarHtml(lat, lng, buttonsHtml || '');
+            var bar = document.getElementById('sidebarActionBar');
+            if (!bar) return;
+            var html = buildSidebarActionBarHtml(lat, lng, buttonsHtml || '');
+            if (!html) {
+                bar.innerHTML = '';
+                bar.style.display = 'none';
+                return;
+            }
+            bar.style.display = '';
+            bar.innerHTML = html;
         }
 
         function renderSidebarFooterHint() {
@@ -3580,11 +3567,13 @@
         }
 
         function clearSidebarVideo() {
-            var wrap = document.getElementById('sidebarVideoWrap');
-            if (wrap) {
-                wrap.innerHTML = '';
-                wrap.style.display = 'none';
-            }
+            ['sidebarVideoWrap', 'cmsSidebarVideoWrap'].forEach(function (wrapId) {
+                var wrap = document.getElementById(wrapId);
+                if (wrap) {
+                    wrap.innerHTML = '';
+                    wrap.style.display = 'none';
+                }
+            });
         }
 
         function renderSidebarCover(coverUrl) {
@@ -3642,6 +3631,8 @@
                 var establishedRaw = props['Year Constructed'] || '';
 
                 bodyHtml +=
+                    sidebarActionBarShellHtml() +
+                    '<div id="sidebarVideoWrap" class="sidebar-video-wrap icbc-sidebar-video-wrap"></div>' +
                     '<div id="sidebarCoverWrap" class="sidebar-cover-wrap"></div>' +
                     '<div class="sidebar-panel-inner">' +
                     '<div class="sidebar-sheet">' +
@@ -3686,6 +3677,7 @@
                 enrichSidebarFromApi(props._slug || slugifyForApi(props['Site Name']), localDashboard);
             } else if (kind === 'cms') {
                 bodyHtml +=
+                    sidebarActionBarShellHtml() +
                     '<div id="cmsSidebarVideoWrap" class="sidebar-video-wrap cms-sidebar-video-wrap"></div>' +
                     '<div class="sidebar-panel-inner cms-panel">' +
                     '<div class="sidebar-sheet cms-sheet">' +
@@ -5112,10 +5104,6 @@
         L.DomEvent.disableScrollPropagation(sidebarEl);
 
         document.getElementById('sidebarClose').addEventListener('click', closeSiteSidebar);
-        var sidebarBackMobile = document.getElementById('sidebarBackMobile');
-        if (sidebarBackMobile) {
-            sidebarBackMobile.addEventListener('click', closeSiteSidebar);
-        }
         if (sidebarExpandBtn) {
             sidebarExpandBtn.addEventListener('click', function () {
                 setSidebarExpanded(!sidebarEl.classList.contains('expanded'));
@@ -5149,6 +5137,48 @@
             } else if (kind === 'cms') {
                 bindCmsMarkerAnimation(layer);
             }
+        }
+
+        function bindSiteLabelClick(layer, kind, props) {
+            function attach() {
+                var tip = layer.getTooltip ? layer.getTooltip() : null;
+                if (!tip) return;
+                var el = tip.getElement ? tip.getElement() : null;
+                if (!el || el._siteLabelClickBound) return;
+                el._siteLabelClickBound = true;
+                L.DomEvent.disableClickPropagation(el);
+                L.DomEvent.on(el, 'click', function (e) {
+                    L.DomEvent.stopPropagation(e);
+                    openSiteSidebar(kind, props, layer);
+                });
+            }
+            layer.on('tooltipopen', attach);
+            attach();
+        }
+
+        function icbcSiteTooltipOptions() {
+            return {
+                permanent: true,
+                interactive: true,
+                direction: 'top',
+                offset: [0, -2],
+                className: 'css_ICBCSites_6'
+            };
+        }
+
+        function cmsSiteTooltipOptions() {
+            return {
+                permanent: true,
+                interactive: true,
+                direction: 'top',
+                offset: [0, -8],
+                className: 'css_CMS_5'
+            };
+        }
+
+        function bindPermanentSiteTooltip(layer, labelHtml, tooltipOptions, kind, props) {
+            layer.bindTooltip(labelHtml, tooltipOptions);
+            bindSiteLabelClick(layer, kind, props);
         }
 
         var hash = new L.Hash(map);
@@ -5313,8 +5343,8 @@
             };
         }
 
-        function getIcbcLabelGroups() {
-            return [layer_ICBCSites_6, layer_icbcExtraSites];
+        function getSiteLabelGroups() {
+            return [layer_ICBCSites_6, layer_icbcExtraSites, layer_CMS_5];
         }
 
         function getLabelMarkerGroups() {
@@ -5328,7 +5358,7 @@
         }
 
         function refreshSiteNameLabels() {
-            resetLabels(getLabelMarkerGroups(), getIcbcLabelGroups());
+            resetLabels(getLabelMarkerGroups(), getSiteLabelGroups());
         }
 
         function refreshSiteNameLabelsBurst() {
@@ -5650,9 +5680,12 @@
             };
             pop_ICBCSites_6(marker.feature, marker);
             var siteName = site.name || '';
-            marker.bindTooltip(
+            bindPermanentSiteTooltip(
+                marker,
                 siteName ? '<div>' + escapeHtml(siteName) + '</div>' : '',
-                { permanent: true, offset: [0, -4], className: 'css_ICBCSites_6' }
+                icbcSiteTooltipOptions(),
+                'icbc',
+                props
             );
             layer_icbcExtraSites.addLayer(marker);
             labels.push(marker);
@@ -5975,7 +6008,13 @@
         var i = 0;
         layer_CMS_5.eachLayer(function(layer) {
             var cmsLabel = 'Challenge Ministries';
-            layer.bindTooltip('<div>' + cmsLabel + '</div>', {permanent: true, offset: [-0, -16], className: 'css_CMS_5'});
+            bindPermanentSiteTooltip(
+                layer,
+                '<div>' + cmsLabel + '</div>',
+                cmsSiteTooltipOptions(),
+                'cms',
+                layer.feature.properties
+            );
             labels.push(layer);
             totalMarkers += 1;
             layer.added = true;
@@ -5986,9 +6025,12 @@
         var i = 0;
         layer_ICBCSites_6.eachLayer(function(layer) {
             var siteName = layer.feature.properties['Site Name'];
-            layer.bindTooltip(
+            bindPermanentSiteTooltip(
+                layer,
                 siteName != null ? String('<div>' + siteName + '</div>') : '',
-                { permanent: true, offset: [0, -4], className: 'css_ICBCSites_6' }
+                icbcSiteTooltipOptions(),
+                'icbc',
+                layer.feature.properties
             );
             labels.push(layer);
             totalMarkers += 1;

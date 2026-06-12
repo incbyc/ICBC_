@@ -11,7 +11,6 @@ labelEngine = new labelgun.default(hideLabel, showLabel);
 
 var labels = [];
 var totalMarkers = 0;
-var ICBC_LABEL_FULL_ZOOM = 9;
 
 function getTooltipContainer(layer) {
     if (!layer.getTooltip) return null;
@@ -29,15 +28,15 @@ function getTooltipContainer(layer) {
     return null;
 }
 
-function isIcbcSiteLabelLayer(layer) {
+function isSiteNameLabelLayer(layer) {
     var label = getTooltipContainer(layer);
-    return !!(label && label.classList && label.classList.contains('css_ICBCSites_6'));
+    if (!label || !label.classList) return false;
+    return label.classList.contains('css_ICBCSites_6') || label.classList.contains('css_CMS_5');
 }
 
 function labelWeightForLayer(layer) {
     var label = getTooltipContainer(layer);
     if (!label || !label.classList) return 4;
-    if (label.classList.contains('css_ICBCSites_6')) return 10;
     if (label.classList.contains('css_CMS_5')) return 6;
     if (label.classList.contains('css_Roads_4')) return 2;
     return 4;
@@ -95,27 +94,24 @@ function ingestLayerLabel(layer, id, engine) {
     }
 }
 
-function revealIcbcLabelsInViewport(icbcGroups) {
-    if (!map || map.getZoom() < ICBC_LABEL_FULL_ZOOM) return;
-
-    var bounds = map.getBounds().pad(0.08);
-    (icbcGroups || []).forEach(function (group) {
+function showAllSiteNameLabels(siteGroups) {
+    (siteGroups || []).forEach(function (group) {
         if (!group || !group.eachLayer) return;
         group.eachLayer(function (layer) {
-            if (!isIcbcSiteLabelLayer(layer)) return;
-            var ll = layer.getLatLng ? layer.getLatLng() : null;
-            if (!ll || !bounds.contains(ll)) return;
+            if (!isSiteNameLabelLayer(layer)) return;
             var label = getTooltipContainer(layer);
             if (!label) return;
             label.style.display = 'block';
             label.style.visibility = 'visible';
             label.style.opacity = 1;
             label.style.transition = 'opacity 0.15s';
+            label.style.pointerEvents = 'auto';
+            label.style.cursor = 'pointer';
         });
     });
 }
 
-function resetLabels(markerGroups, icbcRevealGroups) {
+function resetLabels(markerGroups, siteLabelGroups) {
     var i = 0;
     var j;
 
@@ -123,13 +119,25 @@ function resetLabels(markerGroups, icbcRevealGroups) {
     for (j = 0; j < markerGroups.length; j++) {
         if (!markerGroups[j]) continue;
         markerGroups[j].eachLayer(function (layer) {
+            if (isSiteNameLabelLayer(layer)) return;
             ingestLayerLabel(layer, ++i, labelEngine);
         });
     }
     labelEngine.update();
-    revealIcbcLabelsInViewport(icbcRevealGroups);
+    showAllSiteNameLabels(siteLabelGroups);
 }
 
 function addLabel(layer, id) {
+    if (isSiteNameLabelLayer(layer)) {
+        var label = getTooltipContainer(layer);
+        if (label) {
+            label.style.display = 'block';
+            label.style.visibility = 'visible';
+            label.style.opacity = 1;
+            label.style.pointerEvents = 'auto';
+            label.style.cursor = 'pointer';
+        }
+        return;
+    }
     ingestLayerLabel(layer, id, labelEngine);
 }
