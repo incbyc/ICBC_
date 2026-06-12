@@ -3627,7 +3627,11 @@
                 : '';
 
             if (kind === 'icbc') {
-                var pastorPhoto = buildImagePath(props['Pastors Photo']);
+                var pastorPhoto = buildImagePath(props['Pastors Photo']) ||
+                    legacyPastorPhotoForSlug(
+                        props._slug || slugifyForApi(props['Site Name']),
+                        props['Site Name'] || ''
+                    );
                 var establishedRaw = props['Year Constructed'] || '';
 
                 bodyHtml +=
@@ -3756,11 +3760,27 @@
             return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
         }
 
+        function staffPhotoUrlValue(person) {
+            if (!person) return '';
+            return String(person.photo_url || person.photo || '').trim();
+        }
+
+        function legacyPastorPhotoForSlug(slug, siteName) {
+            var key = slugifyForApi(slug || siteName || '');
+            if (!key || !json_ICBCSites_6 || !json_ICBCSites_6.features) return '';
+            for (var i = 0; i < json_ICBCSites_6.features.length; i++) {
+                var props = json_ICBCSites_6.features[i].properties || {};
+                if (slugifyForApi(props['Site Name']) !== key) continue;
+                return buildImagePath(props['Pastors Photo']) || '';
+            }
+            return '';
+        }
+
         function resolveStaffPhoto(person, fallbackPhoto) {
-            var raw = '';
-            if (person && person.photo_url) raw = person.photo_url;
-            else if (person && person.photo) raw = person.photo;
-            else if (person && person.role === 'Pastor' && fallbackPhoto) raw = fallbackPhoto;
+            var raw = staffPhotoUrlValue(person);
+            if (!raw && person && person.role === 'Pastor' && fallbackPhoto) {
+                raw = String(fallbackPhoto).trim();
+            }
             if (!raw) return '';
             var base = String(raw).split('?')[0];
             var url = resolvePublicAssetUrl(base);
@@ -3818,8 +3838,11 @@
                     focusAttrs = ' data-focus-x="' + escapeHtml(String(pastor.photo_focus_x)) +
                         '" data-focus-y="' + escapeHtml(String(pastor.photo_focus_y)) + '"';
                 }
+                var fallbackSrc = fallbackPhoto && fallbackPhoto !== photo
+                    ? ' data-fallback-src="' + escapeHtml(fallbackPhoto) + '"'
+                    : '';
                 html += '<img src="' + escapeHtml(photo) + '" alt="" class="sidebar-pastor-hero-photo"' +
-                    focusAttrs + '>';
+                    focusAttrs + fallbackSrc + '>';
             } else {
                 html += '<div class="sidebar-pastor-hero-photo placeholder" aria-hidden="true">' +
                     escapeHtml(staffInitials(name)) + '</div>';
@@ -3831,6 +3854,13 @@
             root.innerHTML = html;
             var img = root.querySelector('img.sidebar-pastor-hero-photo');
             if (img) {
+                if (img.dataset.fallbackSrc) {
+                    img.addEventListener('error', function onPastorPhotoError() {
+                        if (img.dataset.fallbackUsed) return;
+                        img.dataset.fallbackUsed = '1';
+                        img.src = img.dataset.fallbackSrc;
+                    }, { once: true });
+                }
                 applyStaffPhotoFaceFocus(img, true);
                 bindStaffPhotoPreview(img);
             }
@@ -5064,7 +5094,8 @@
                 .then(function (data) {
                     if (!data) return;
 
-                    var fallbackPhoto = sidebarBody.dataset.pastorPhoto || '';
+                    var fallbackPhoto = sidebarBody.dataset.pastorPhoto ||
+                        legacyPastorPhotoForSlug(slug, '') || '';
                     var fallbackPastor = sidebarBody.dataset.pastorName
                         ? { full_name: sidebarBody.dataset.pastorName, role: 'Pastor' }
                         : null;
@@ -5073,8 +5104,23 @@
                     staffList.forEach(function (person) {
                         if ((person.role || '') === 'Pastor' && !apiPastor) apiPastor = person;
                     });
-                    if (apiPastor && apiPastor.photo_url) {
-                        fallbackPhoto = '';
+                    if (apiPastor) {
+                        if (staffPhotoUrlValue(apiPastor)) {
+                            fallbackPhoto = '';
+                        } else {
+                            if (!fallbackPhoto && data.sidebar && staffPhotoUrlValue({ photo_url: data.sidebar.pastor_photo_url })) {
+                                fallbackPhoto = resolveStaffPhoto(
+                                    { photo_url: data.sidebar.pastor_photo_url, role: 'Pastor' },
+                                    ''
+                                );
+                            }
+                            if (!fallbackPhoto) {
+                                fallbackPhoto = legacyPastorPhotoForSlug(
+                                    slug,
+                                    apiPastor.full_name || fallbackPastor && fallbackPastor.full_name || ''
+                                ) || fallbackPhoto;
+                            }
+                        }
                     }
                     renderSidebarStaff(staffList, fallbackPastor, fallbackPhoto);
 
@@ -5625,10 +5671,16 @@
                 'Year Constructed': site.year_constructed || '',
                 'Site Link': site.site_link || '',
                 '_slug': site.slug || '',
-                'Pastor': '',
-                'Pastors Photo': '',
                 'PreSchool': ''
             };
+        }
+
+        function mergeSupabaseSiteProps(target, incoming) {
+            Object.keys(incoming).forEach(function (key) {
+                var value = incoming[key];
+                if (value == null || value === '') return;
+                target[key] = value;
+            });
         }
 
         var layer_icbcExtraSites = L.featureGroup();
@@ -5661,7 +5713,7 @@
             if (existing && existing.layer && typeof existing.layer.setLatLng === 'function') {
                 existing.layer.setLatLng([lat, lng]);
                 existing.latlng = existing.layer.getLatLng();
-                Object.assign(existing.props, props);
+                mergeSupabaseSiteProps(existing.props, props);
                 existing.siteName = site.name || existing.siteName;
                 existing.region = site.region || '';
                 existing.siteSlug = slug;

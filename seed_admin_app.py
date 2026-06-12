@@ -6,6 +6,7 @@ import csv
 import hashlib
 import importlib.util
 import io
+import json
 import re
 import sys
 import unicodedata
@@ -440,6 +441,53 @@ def local_media_path(path_value: str) -> Path | None:
     if not value or is_remote_media_url(value):
         return None
     return ROOT / value.replace("\\", "/")
+
+
+@st.cache_data(show_spinner=False)
+def load_legacy_pastor_photos() -> dict[str, str]:
+    """Map site slug to legacy pastor portrait under images/ (from ICBCSites GeoJSON)."""
+    geojson_path = ROOT / "data" / "ICBCSites_6.js"
+    if not geojson_path.exists():
+        return {}
+
+    text = geojson_path.read_text(encoding="utf-8")
+    start = text.find("{")
+    end = text.rfind("}")
+    if start < 0 or end <= start:
+        return {}
+
+    try:
+        data = json.loads(text[start : end + 1])
+    except json.JSONDecodeError:
+        return {}
+
+    mapping: dict[str, str] = {}
+    for feature in data.get("features") or []:
+        props = feature.get("properties") or {}
+        site_name = format_value(props.get("Site Name", ""))
+        raw_photo = format_value(props.get("Pastors Photo", ""))
+        if not site_name or not raw_photo:
+            continue
+        safe_name = re.sub(r"[\\/:]", "_", raw_photo).strip()
+        if not safe_name:
+            continue
+        relative_path = f"images/{safe_name}".replace("\\", "/")
+        if (ROOT / relative_path).is_file():
+            mapping[slugify(site_name)] = relative_path
+    return mapping
+
+
+def legacy_pastor_photo_path(site_slug: str) -> str:
+    return load_legacy_pastor_photos().get(slugify(site_slug), "")
+
+
+def resolve_staff_photo_display(row: dict[str, str]) -> str:
+    photo = format_value(row.get("photo_url", ""))
+    if photo:
+        return photo
+    if format_value(row.get("role", "")) == "Pastor":
+        return legacy_pastor_photo_path(row.get("site_slug", ""))
+    return ""
 
 
 def preview_image_if_local(path_value: str, caption: str) -> None:
@@ -1188,7 +1236,10 @@ def render_edit_existing_panel(
             defaults=selected_row,
         )
         st.markdown("#### Staff photo")
-        preview_image_if_local(selected_row.get("photo_url", ""), "Current staff photo")
+        preview_image_if_local(
+            resolve_staff_photo_display(selected_row),
+            "Current staff photo",
+        )
         staff_upload_new = st.file_uploader(
             "Upload a new staff photo (optional)",
             type=["png", "jpg", "jpeg", "webp"],
@@ -1199,7 +1250,7 @@ def render_edit_existing_panel(
         pending_upload_bytes = st.session_state.get(upload_bytes_key)
         render_staff_photo_cropper(
             crop_session_key,
-            existing_path="" if pending_upload_bytes else selected_row.get("photo_url", ""),
+            existing_path="" if pending_upload_bytes else resolve_staff_photo_display(selected_row),
             upload=staff_upload_new,
             upload_bytes=None if staff_upload_new is not None else pending_upload_bytes,
         )
