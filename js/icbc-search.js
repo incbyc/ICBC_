@@ -102,7 +102,7 @@ function registerStaffRow(row) {
     var slug = (row.site_slug || '').trim().toLowerCase();
     var fullName = (row.full_name || '').trim();
     var role = (row.role || '').trim();
-    if (!slug || !fullName) return;
+    if (!slug || !fullName || role !== 'Pastor') return;
 
     var site = icbcSiteRegistry[slug];
     if (!site) return;

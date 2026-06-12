@@ -501,19 +501,27 @@ def save_staff_photo_bytes(
     entity_slug: str,
     *,
     filename_stem: str = "portrait",
+    replace_existing: str = "",
 ) -> str:
     relative_dir = Path(relative_root.strip("/\\")) / "staff" / (entity_slug or "misc")
     safe_stem = slugify(filename_stem) or "portrait"
-    candidate = ROOT / relative_dir / f"{safe_stem}.jpg"
+    content_id = hashlib.md5(image_bytes).hexdigest()[:10]
+    candidate = ROOT / relative_dir / f"{safe_stem}-{content_id}.jpg"
     candidate.parent.mkdir(parents=True, exist_ok=True)
-
-    suffix = 2
-    while candidate.exists():
-        candidate = ROOT / relative_dir / f"{safe_stem}-{suffix}.jpg"
-        suffix += 1
-
     candidate.write_bytes(image_bytes)
-    return candidate.relative_to(ROOT).as_posix()
+    relative_path = candidate.relative_to(ROOT).as_posix()
+
+    if replace_existing:
+        old_path = format_value(replace_existing)
+        if old_path and old_path != relative_path:
+            old_file = ROOT / old_path.replace("\\", "/")
+            if old_file.is_file():
+                try:
+                    old_file.unlink()
+                except OSError:
+                    pass
+
+    return relative_path
 
 
 def rotate_portrait_image(image, degrees: int):
@@ -547,19 +555,53 @@ def show_round_photo_preview(pil_image, *, width: int = 148, caption: str = "Rou
     )
 
 
+def center_square_crop(image):
+    """Fallback when streamlit-cropper is unavailable."""
+    from PIL import Image
+
+    if not isinstance(image, Image.Image):
+        image = Image.open(io.BytesIO(image))
+    rgb = image.convert("RGB")
+    width, height = rgb.size
+    side = min(width, height)
+    left = (width - side) // 2
+    top = (height - side) // 2
+    return rgb.crop((left, top, left + side, top + side))
+
+
+def load_st_cropper():
+    """Return st_cropper or None if the component frontend is missing."""
+    try:
+        import pathlib
+
+        import streamlit_cropper
+        from streamlit_cropper import st_cropper
+
+        frontend = pathlib.Path(streamlit_cropper.__file__).resolve().parent / "frontend" / "build"
+        if not frontend.is_dir():
+            return None
+        return st_cropper
+    except Exception:
+        return None
+
+
 def render_staff_photo_cropper(
     session_key: str,
     *,
     existing_path: str = "",
     upload=None,
+    upload_bytes: bytes | None = None,
 ) -> bytes | None:
     """Manual square crop with a round preview. Stores JPEG bytes in session_state."""
     from PIL import Image
-    from streamlit_cropper import st_cropper
+
+    st_cropper = load_st_cropper()
 
     source_bytes: bytes | None = None
     if upload is not None:
         source_bytes = bytes(upload.getvalue())
+    elif upload_bytes:
+        source_bytes = bytes(upload_bytes)
     elif existing_path:
         file_path = ROOT / existing_path
         if file_path.is_file():
@@ -570,10 +612,18 @@ def render_staff_photo_cropper(
         return None
 
     st.markdown("#### Portrait crop")
-    st.caption(
-        "Rotate the photo if needed, then drag and resize the square crop box so the face is centred. "
-        "The map sidebar shows this image in a round frame."
-    )
+    if st_cropper is None:
+        st.info(
+            "Interactive crop tool is unavailable in this Python environment. "
+            "Using a centered square crop after rotation. "
+            "For manual cropping, run Streamlit with Python 3.8–3.12 and reinstall: "
+            "`pip install --force-reinstall streamlit-cropper`."
+        )
+    else:
+        st.caption(
+            "Rotate the photo if needed, then drag and resize the square crop box so the face is centred. "
+            "The map sidebar shows this image in a round frame."
+        )
 
     image = Image.open(io.BytesIO(source_bytes))
     if image.mode not in ("RGB", "RGBA"):
@@ -616,13 +666,22 @@ def render_staff_photo_cropper(
     st.session_state[rotation_key] = angle
     image = rotate_portrait_image(image, angle)
 
-    cropped = st_cropper(
-        image,
-        realtime_update=True,
-        aspect_ratio=(1, 1),
-        return_type="image",
-        key=f"{session_key}-widget-{angle}",
-    )
+    if st_cropper is None:
+        cropped = center_square_crop(image)
+    else:
+        try:
+            cropped = st_cropper(
+                image,
+                realtime_update=True,
+                aspect_ratio=(1, 1),
+                return_type="image",
+                key=f"{session_key}-widget-{angle}",
+            )
+        except Exception:
+            st.warning(
+                "Interactive crop tool failed to load. Using a centered square crop instead."
+            )
+            cropped = center_square_crop(image)
 
     preview_cols = st.columns([1, 2])
     with preview_cols[0]:
@@ -841,6 +900,8 @@ def apply_media_uploads(
     branch: str,
     url_style: str,
     staff_cropped_bytes: bytes | None = None,
+    staff_upload_bytes: bytes | None = None,
+    existing_photo_url: str = "",
 ) -> dict[str, str]:
     if config.key == "icbc_sites":
         entity_slug = row.get("slug") or slugify(row.get("name", ""))
@@ -849,28 +910,35 @@ def apply_media_uploads(
             row["photo_path"] = save_media_file(site_photo_upload, media_root, "sites", entity_slug)
         if cover_upload is not None and "cover_image_url" in columns:
             row["cover_image_url"] = save_media_file(cover_upload, media_root, "covers", entity_slug)
-    elif config.key == "staff" and row.get("site_slug") and (staff_cropped_bytes or staff_photo_upload):
+    elif config.key == "staff" and row.get("site_slug"):
         staff_folder = f'{row.get("site_slug", "")}-{slugify(row.get("full_name", ""))}'
         stem = slugify(row.get("full_name", "")) or "portrait"
-        if staff_cropped_bytes:
+        image_bytes = staff_cropped_bytes
+
+        if not image_bytes and staff_upload_bytes:
+            from PIL import Image
+
+            image_bytes = _pil_jpeg_bytes(center_square_crop(Image.open(io.BytesIO(staff_upload_bytes))))
+        elif not image_bytes and staff_photo_upload is not None:
+            image_bytes = bytes(staff_photo_upload.getvalue())
+
+        if image_bytes and "photo_url" in columns:
+            previous_path = format_value(existing_photo_url or row.get("photo_url", ""))
             relative_path = save_staff_photo_bytes(
-                staff_cropped_bytes,
+                image_bytes,
                 media_root,
                 staff_folder,
                 filename_stem=stem,
+                replace_existing=previous_path,
             )
-        elif staff_photo_upload is not None:
-            relative_path = save_media_file(
-                staff_photo_upload,
-                media_root,
-                "staff",
-                staff_folder,
-            )
-        else:
-            relative_path = ""
-        if "photo_url" in columns and relative_path:
-            row["photo_url"] = relative_path
+            row["photo_url"] = public_media_url(relative_path, repo_slug, branch, url_style) or relative_path
     return row
+
+
+def _pil_jpeg_bytes(pil_image) -> bytes:
+    buffer = io.BytesIO()
+    pil_image.convert("RGB").save(buffer, format="JPEG", quality=92)
+    return buffer.getvalue()
 
 
 def validate_rows(config: TableConfig, rows: list[dict[str, str]]) -> list[str]:
@@ -1051,15 +1119,20 @@ def render_edit_existing_panel(
     elif config.key == "staff":
         preview_image_if_local(selected_row.get("photo_url", ""), "Current staff photo")
         crop_session_key = f"{config.key}-edit-crop-{original_key}"
+        upload_bytes_key = f"{config.key}-edit-staff-upload-bytes-{original_key}"
         staff_upload_new = st.file_uploader(
             "Upload a new staff photo (optional)",
             type=["png", "jpg", "jpeg", "webp"],
             key=f"{config.key}-edit-staff-upload-{original_key}",
         )
+        if staff_upload_new is not None:
+            st.session_state[upload_bytes_key] = staff_upload_new.getvalue()
+        pending_upload_bytes = st.session_state.get(upload_bytes_key)
         render_staff_photo_cropper(
             crop_session_key,
-            existing_path="" if staff_upload_new else selected_row.get("photo_url", ""),
+            existing_path="" if pending_upload_bytes else selected_row.get("photo_url", ""),
             upload=staff_upload_new,
+            upload_bytes=None if staff_upload_new is not None else pending_upload_bytes,
         )
 
     with st.form(f"{config.key}-edit-form"):
@@ -1096,20 +1169,26 @@ def render_edit_existing_panel(
     if config.key == "icbc_sites":
         row = normalise_icbc_site_row(row)
     staff_crop_bytes = None
+    staff_upload_bytes = None
+    existing_photo_url = ""
     if config.key == "staff":
         staff_crop_bytes = st.session_state.get(f"{config.key}-edit-crop-{original_key}")
+        staff_upload_bytes = st.session_state.get(f"{config.key}-edit-staff-upload-bytes-{original_key}")
+        existing_photo_url = selected_row.get("photo_url", "")
     row = apply_media_uploads(
         config,
         columns,
         row,
         site_photo_upload=site_photo_upload,
         cover_upload=cover_upload,
-        staff_photo_upload=staff_photo_upload,
+        staff_photo_upload=staff_upload_new if config.key == "staff" else staff_photo_upload,
         media_root=media_root,
         repo_slug=repo_slug,
         branch=branch,
         url_style=url_style,
         staff_cropped_bytes=staff_crop_bytes,
+        staff_upload_bytes=staff_upload_bytes,
+        existing_photo_url=existing_photo_url,
     )
 
     errors = validate_rows(config, [row])
@@ -1133,11 +1212,13 @@ def render_edit_existing_panel(
             st.warning("Add latitude and longitude so the site appears on the map.")
     if config.key == "staff" and row.get("photo_url"):
         st.info(
-            "Staff photo path saved. With **Sync to Supabase on save** enabled, "
-            "refresh the map to see the image (serve the repo locally so paths load)."
+            "Staff photo saved to "
+            f"`{row['photo_url']}`. With **Sync to Supabase on save** enabled, "
+            "hard-refresh the map page (Ctrl+F5) to see the new portrait."
         )
     if config.key == "staff":
         st.session_state.pop(f"{config.key}-edit-crop-{original_key}", None)
+        st.session_state.pop(f"{config.key}-edit-staff-upload-bytes-{original_key}", None)
     st.rerun()
 
 
@@ -1152,14 +1233,21 @@ def render_add_new_panel(
 ) -> None:
     staff_add_upload = None
     staff_add_crop_key = f"{config.key}-add-crop"
+    staff_add_upload_bytes_key = f"{config.key}-add-staff-upload-bytes"
     if config.key == "staff":
         staff_add_upload = st.file_uploader(
             "Staff photo (optional — crop before saving)",
             type=["png", "jpg", "jpeg", "webp"],
             key=f"{config.key}-add-staff-upload",
         )
-        if staff_add_upload:
-            render_staff_photo_cropper(staff_add_crop_key, upload=staff_add_upload)
+        if staff_add_upload is not None:
+            st.session_state[staff_add_upload_bytes_key] = staff_add_upload.getvalue()
+        if staff_add_upload or st.session_state.get(staff_add_upload_bytes_key):
+            render_staff_photo_cropper(
+                staff_add_crop_key,
+                upload=staff_add_upload,
+                upload_bytes=None if staff_add_upload is not None else st.session_state.get(staff_add_upload_bytes_key),
+            )
 
     with st.form(f"{config.key}-add-form", clear_on_submit=True):
         st.subheader(f"Add new {config.title}")
@@ -1183,6 +1271,9 @@ def render_add_new_panel(
     if config.key == "icbc_sites":
         row = normalise_icbc_site_row(row)
     staff_crop_bytes = st.session_state.get(staff_add_crop_key) if config.key == "staff" else None
+    staff_upload_bytes = (
+        st.session_state.get(staff_add_upload_bytes_key) if config.key == "staff" else None
+    )
     row = apply_media_uploads(
         config,
         columns,
@@ -1195,6 +1286,7 @@ def render_add_new_panel(
         branch=branch,
         url_style=url_style,
         staff_cropped_bytes=staff_crop_bytes,
+        staff_upload_bytes=staff_upload_bytes,
     )
 
     errors = validate_rows(config, [row])
@@ -1218,6 +1310,7 @@ def render_add_new_panel(
             st.warning("Add latitude and longitude so the site appears on the map.")
     if config.key == "staff":
         st.session_state.pop(staff_add_crop_key, None)
+        st.session_state.pop(staff_add_upload_bytes_key, None)
     st.rerun()
 
 

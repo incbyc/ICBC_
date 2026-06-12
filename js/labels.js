@@ -4,13 +4,14 @@ var hideLabel = function (label) {
 };
 var showLabel = function (label) {
     label.labelObject.style.opacity = 1;
-    label.labelObject.style.transition = 'opacity 1s';
+    label.labelObject.style.transition = 'opacity 0.15s';
 };
 
 labelEngine = new labelgun.default(hideLabel, showLabel);
 
 var labels = [];
 var totalMarkers = 0;
+var ICBC_LABEL_FULL_ZOOM = 9;
 
 function getTooltipContainer(layer) {
     if (!layer.getTooltip) return null;
@@ -26,6 +27,20 @@ function getTooltipContainer(layer) {
         return tip.getElement();
     }
     return null;
+}
+
+function isIcbcSiteLabelLayer(layer) {
+    var label = getTooltipContainer(layer);
+    return !!(label && label.classList && label.classList.contains('css_ICBCSites_6'));
+}
+
+function labelWeightForLayer(layer) {
+    var label = getTooltipContainer(layer);
+    if (!label || !label.classList) return 4;
+    if (label.classList.contains('css_ICBCSites_6')) return 10;
+    if (label.classList.contains('css_CMS_5')) return 6;
+    if (label.classList.contains('css_Roads_4')) return 2;
+    return 4;
 }
 
 function tooltipBoundsInMapCoords(labelEl, layer) {
@@ -58,7 +73,7 @@ function tooltipBoundsInMapCoords(labelEl, layer) {
     };
 }
 
-function ingestLayerLabel(layer, id, engine, weight) {
+function ingestLayerLabel(layer, id, engine) {
     var label = getTooltipContainer(layer);
     if (!label) return;
 
@@ -68,7 +83,7 @@ function ingestLayerLabel(layer, id, engine, weight) {
     engine.ingestLabel(
         boundingBox,
         id,
-        weight,
+        labelWeightForLayer(layer),
         label,
         'label-' + id,
         false
@@ -80,57 +95,41 @@ function ingestLayerLabel(layer, id, engine, weight) {
     }
 }
 
-function isNestedIcbcMarkerGroup(layer) {
-    return layer && typeof layer.eachLayer === 'function' &&
-        (layer instanceof L.GeoJSON || layer instanceof L.FeatureGroup);
-}
+function revealIcbcLabelsInViewport(icbcGroups) {
+    if (!map || map.getZoom() < ICBC_LABEL_FULL_ZOOM) return;
 
-function showAllIcbcLabelsInView(icbcLayer) {
-    if (!icbcLayer) return;
-    icbcLayer.eachLayer(function (layer) {
-        if (isNestedIcbcMarkerGroup(layer)) {
-            showAllIcbcLabelsInView(layer);
-            return;
-        }
-        if (layer.openTooltip) {
-            layer.openTooltip();
-        }
-        var label = getTooltipContainer(layer);
-        if (!label) return;
-        label.style.display = 'block';
-        label.style.visibility = 'visible';
-        label.style.opacity = 1;
-        label.style.transition = 'opacity 0.15s';
+    var bounds = map.getBounds().pad(0.08);
+    (icbcGroups || []).forEach(function (group) {
+        if (!group || !group.eachLayer) return;
+        group.eachLayer(function (layer) {
+            if (!isIcbcSiteLabelLayer(layer)) return;
+            var ll = layer.getLatLng ? layer.getLatLng() : null;
+            if (!ll || !bounds.contains(ll)) return;
+            var label = getTooltipContainer(layer);
+            if (!label) return;
+            label.style.display = 'block';
+            label.style.visibility = 'visible';
+            label.style.opacity = 1;
+            label.style.transition = 'opacity 0.15s';
+        });
     });
 }
 
-function resetLabels(markerGroups, icbcLayer) {
+function resetLabels(markerGroups, icbcRevealGroups) {
     var i = 0;
     var j;
 
     labelEngine.reset();
     for (j = 0; j < markerGroups.length; j++) {
+        if (!markerGroups[j]) continue;
         markerGroups[j].eachLayer(function (layer) {
-            ingestLayerLabel(layer, ++i, labelEngine, 4);
+            ingestLayerLabel(layer, ++i, labelEngine);
         });
     }
     labelEngine.update();
-
-    if (!icbcLayer) return;
-
-    // Always show ICBC site labels in the current viewport.
-    // This avoids labelgun collisions hiding valid site names.
-    showAllIcbcLabelsInView(icbcLayer);
+    revealIcbcLabelsInViewport(icbcRevealGroups);
 }
 
 function addLabel(layer, id) {
-    var label = getTooltipContainer(layer);
-    if (!label) return;
-    if (label.classList && label.classList.contains('css_ICBCSites_6')) {
-        label.style.display = 'block';
-        label.style.visibility = 'visible';
-        label.style.opacity = 1;
-        return;
-    }
-    ingestLayerLabel(layer, id, labelEngine, 4);
+    ingestLayerLabel(layer, id, labelEngine);
 }

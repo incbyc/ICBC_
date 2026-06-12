@@ -3752,7 +3752,7 @@
                     '<span>Explore further</span></h3>' +
                     '<p class="sidebar-bubele-hint">' +
                     '<i class="fas fa-fire" aria-hidden="true"></i>' +
-                    'Tap an ICBC flame marker on the map for church details, team bios, and weekly statistics.</p>' +
+                    'Tap an ICBC flame marker on the map for church details and weekly statistics.</p>' +
                     '</section></div></div>';
                 sidebarBody.innerHTML = bodyHtml + renderSidebarFooterHint();
                 renderSidebarActionBar(null, null, '');
@@ -3779,13 +3779,15 @@
 
         function resolveStaffPhoto(person, fallbackPhoto) {
             var raw = '';
-            if (person && person.photo) raw = person.photo;
-            else if (person && person.photo_url) raw = person.photo_url;
+            if (person && person.photo_url) raw = person.photo_url;
+            else if (person && person.photo) raw = person.photo;
             else if (person && person.role === 'Pastor' && fallbackPhoto) raw = fallbackPhoto;
             if (!raw) return '';
-            var url = resolvePublicAssetUrl(String(raw).split('?')[0]);
+            var base = String(raw).split('?')[0];
+            var url = resolvePublicAssetUrl(base);
             if (url.indexOf('http') === 0) return url;
-            return url;
+            var cacheKey = base.replace(/[^a-zA-Z0-9._-]+/g, '').slice(-32);
+            return url + (url.indexOf('?') >= 0 ? '&' : '?') + 'v=' + encodeURIComponent(cacheKey || '1');
         }
 
         function splitPastorFromStaff(people, fallbackPastor, fallbackPhoto) {
@@ -3846,9 +3848,6 @@
             html += '<div class="sidebar-pastor-hero-body">' +
                 '<p class="sidebar-pastor-hero-name">' + escapeHtml(name) + '</p>' +
                 '<p class="sidebar-pastor-hero-role">' + escapeHtml(role) + '</p>';
-            if (pastor.description) {
-                html += '<p class="sidebar-pastor-hero-desc">' + escapeHtml(pastor.description) + '</p>';
-            }
             html += '</div></div></section>';
             root.innerHTML = html;
             var img = root.querySelector('img.sidebar-pastor-hero-photo');
@@ -3987,7 +3986,8 @@
             var people = (staffList && staffList.length) ? staffList.slice() : [];
             var split = splitPastorFromStaff(people, fallbackPastor, fallbackPhoto);
             renderSidebarPastorHero(split.pastor, fallbackPhoto);
-            renderSidebarTeam(split.team, fallbackPhoto);
+            var teamRoot = document.getElementById('sidebarStaffSection');
+            if (teamRoot) teamRoot.innerHTML = '';
         }
 
         function rowHasPloughingData(row) {
@@ -4855,16 +4855,6 @@
                         escapeHtml(formatDashDate(pre.snapshot_date)) + '</p>';
                 }
                 html += sidebarImpactMetrics(preStats);
-                var preYearRows = filterPreschoolYearRows(pre.yearly || []);
-                if (preYearRows.length > 1) {
-                    html += '<table class="sidebar-data-table" style="margin-top:10px"><thead><tr>' +
-                        '<th>Year</th><th>Children</th></tr></thead><tbody>';
-                    preYearRows.forEach(function (row) {
-                        html += '<tr><td>' + escapeHtml(String(row.year || '—')) + '</td>' +
-                            '<td>' + escapeHtml(formatMetricValue(row.children_count)) + '</td></tr>';
-                    });
-                    html += '</tbody></table>';
-                }
                 html += '</section>';
             }
 
@@ -5099,11 +5089,15 @@
                     var fallbackPastor = sidebarBody.dataset.pastorName
                         ? { full_name: sidebarBody.dataset.pastorName, role: 'Pastor' }
                         : null;
-                    renderSidebarStaff(
-                        filterSpreadsheetOnlyTeachers(data.staffList || []),
-                        fallbackPastor,
-                        fallbackPhoto
-                    );
+                    var staffList = filterSpreadsheetOnlyTeachers(data.staffList || []);
+                    var apiPastor = null;
+                    staffList.forEach(function (person) {
+                        if ((person.role || '') === 'Pastor' && !apiPastor) apiPastor = person;
+                    });
+                    if (apiPastor && apiPastor.photo_url) {
+                        fallbackPhoto = '';
+                    }
+                    renderSidebarStaff(staffList, fallbackPastor, fallbackPhoto);
 
                     renderSidebarDashboard(mergeDashboardWithSupabase(localDashboard, data, slug));
 
@@ -5331,11 +5325,22 @@
             };
         }
 
+        function getIcbcLabelGroups() {
+            return [layer_ICBCSites_6, layer_icbcExtraSites];
+        }
+
+        function getLabelMarkerGroups() {
+            return [
+                layer_eSwatiniRegions_2,
+                layer_Roads_4,
+                layer_CMS_5,
+                layer_ICBCSites_6,
+                layer_icbcExtraSites
+            ];
+        }
+
         function refreshSiteNameLabels() {
-            resetLabels(
-                [layer_eSwatiniRegions_2, layer_Roads_4, layer_CMS_5],
-                layer_icbcAllSites || layer_ICBCSites_6
-            );
+            resetLabels(getLabelMarkerGroups(), getIcbcLabelGroups());
         }
 
         function refreshSiteNameLabelsBurst() {
@@ -6030,15 +6035,27 @@
         function scheduleLabelReset() {
             if (labelResetTimer) clearTimeout(labelResetTimer);
             labelResetTimer = setTimeout(function () {
-                resetLabels(
-                    [layer_eSwatiniRegions_2, layer_Roads_4, layer_CMS_5],
-                    layer_icbcAllSites || layer_ICBCSites_6
-                );
-            }, 80);
+                refreshSiteNameLabels();
+            }, 100);
+        }
+
+        function isManagedLabelOverlay(layer) {
+            return layer === layer_eSwatiniRegions_2 ||
+                layer === layer_Roads_4 ||
+                layer === layer_CMS_5 ||
+                layer === layer_ICBCSites_6 ||
+                layer === layer_icbcExtraSites ||
+                layer === layer_icbcAllSites;
         }
 
         map.on('zoomend', scheduleLabelReset);
         map.on('moveend', scheduleLabelReset);
+        map.on('overlayadd', function (e) {
+            if (isManagedLabelOverlay(e.layer)) scheduleLabelReset();
+        });
+        map.on('overlayremove', function (e) {
+            if (isManagedLabelOverlay(e.layer)) scheduleLabelReset();
+        });
 
         window.openSiteSidebar = openSiteSidebar;
         window.scheduleFlyToMarker = scheduleFlyToMarker;

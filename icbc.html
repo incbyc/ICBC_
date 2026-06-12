@@ -755,32 +755,13 @@
                     if (pImg) {
                         pastorShell.innerHTML += '<img class="pastor-photo" src="' + pImg + '" alt="">';
                     }
-                    pastorShell.innerHTML += '<div><div class="pastor-name">' + pastor.full_name + '</div>';
-                    if (pastor.description) {
-                        pastorShell.innerHTML += '<p class="team-desc">' + pastor.description + '</p>';
-                    }
-                    pastorShell.innerHTML += '</div>';
+                    pastorShell.innerHTML += '<div><div class="pastor-name">' + pastor.full_name + '</div></div>';
                 } else {
                     pastorShell.innerHTML = '<p class="muted-note">Add a pastor in Supabase (staff table, role Pastor).</p>';
                 }
 
                 var shell = document.getElementById('staff-sections-shell');
                 shell.innerHTML = '';
-                [
-                    { title: 'Teachers', role: 'Teacher' },
-                    { title: 'Compassionate care team', role: 'Compassionate Care' },
-                    { title: 'Other staff', role: 'Other' }
-                ].forEach(function (g) {
-                    var people = staff.filter(function (p) { return p.role === g.role; });
-                    if (!people.length) return;
-                    var html = '<div class="section"><div class="section-title">' + g.title + '</div><div class="team-grid">';
-                    people.forEach(function (p) { html += renderStaffCard(p); });
-                    html += '</div></div>';
-                    shell.innerHTML += html;
-                });
-                if (!shell.innerHTML) {
-                    shell.innerHTML = '<p class="muted-note">Add teachers and care team in Supabase (staff table).</p>';
-                }
             }
 
             function renderPage(site) {
