@@ -1,0 +1,7 @@
+# Seed Admin only (no Django). Use Python 3.8–3.12 for interactive photo cropping.
+openpyxl
+pandas
+streamlit
+supabase>=2.0,<3.0
+streamlit-cropper>=0.2.2,<0.3
+Pillow>=10.0,<12.0

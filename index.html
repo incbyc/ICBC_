@@ -592,20 +592,21 @@
                 0 0 5px #000 !important;
         }
 
-        /* Satellite: pill labels instead of halo text */
+        /* Satellite: compact dark pill labels */
         body.map-satellite .leaflet-tooltip.css_ICBCSites_6,
         body.map-satellite .leaflet-tooltip.css_CMS_5 {
-            background: rgba(18, 22, 28, 0.82) !important;
+            background: rgba(18, 22, 28, 0.88) !important;
             color: #f8fafc !important;
-            border: 1px solid rgba(255, 255, 255, 0.22) !important;
-            border-radius: 6px !important;
-            padding: 3px 9px !important;
-            font-size: 11px !important;
+            border: 1px solid rgba(255, 255, 255, 0.18) !important;
+            border-radius: 4px !important;
+            padding: 1px 5px !important;
+            font-size: 9px !important;
             font-weight: 600 !important;
-            letter-spacing: 0.02em;
+            letter-spacing: 0.01em;
+            line-height: 1.25 !important;
             text-shadow: none !important;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45) !important;
-            backdrop-filter: blur(6px);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4) !important;
+            backdrop-filter: blur(4px);
             pointer-events: auto !important;
             cursor: pointer;
         }
@@ -1374,7 +1375,7 @@
 
             .css_ICBCSites_6,
             .css_CMS_5 {
-                font-size: 11px !important;
+                font-size: 10px !important;
             }
 
             .leaflet-popup-content {
@@ -1644,10 +1645,8 @@
         }
 
         .sidebar-header.cms {
-            background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
-            box-shadow:
-                0 4px 18px rgba(13, 71, 161, 0.35),
-                inset 0 1px 0 rgba(255, 255, 255, 0.14);
+            background: var(--icbc-header-gradient);
+            box-shadow: var(--icbc-header-shadow);
         }
 
         .sidebar-header.bubele {
@@ -1835,9 +1834,7 @@
         }
 
         .sidebar-header.cms .sidebar-badge {
-            background: rgba(255, 255, 255, 0.18);
-            padding: 3px 8px;
-            border-radius: 4px;
+            display: none;
         }
 
         .cms-sheet {
@@ -3612,9 +3609,12 @@
             );
 
             sidebarHeader.className = headerClass;
+            var badgeHtml = kind === 'cms'
+                ? ''
+                : '<span class="sidebar-badge">' + badge + '</span>';
             sidebarHeaderTop.innerHTML =
                 '<img src="' + logoSrc + '" alt="" class="sidebar-logo">' +
-                '<div><span class="sidebar-badge">' + badge + '</span>' +
+                '<div>' + badgeHtml +
                 '<h2 class="sidebar-title">' + escapeHtml(siteName) + '</h2>' +
                 (region ? '<div class="sidebar-region">' + escapeHtml(region) + '</div>' : '') +
                 '</div>';
@@ -3644,12 +3644,12 @@
 
                 actionsHtml = directionsBtn;
 
+                sidebarBody.innerHTML = bodyHtml + renderSidebarFooterHint();
                 renderSidebarActionBar(
                     coords ? coords.lat : null,
                     coords ? coords.lng : null,
                     actionsHtml
                 );
-                sidebarBody.innerHTML = bodyHtml + renderSidebarFooterHint();
                 sidebarBody.dataset.pastorPhoto = pastorPhoto || '';
                 sidebarBody.dataset.pastorName = props['Pastor'] || '';
                 renderSidebarMedia(props['Site Link'] || '', '');
@@ -3690,12 +3690,12 @@
                     '<a href="https://challengeministries.org" target="_blank" rel="noopener" class="sidebar-btn-nav">' +
                     '<i class="fas fa-external-link-alt" aria-hidden="true"></i> Visit Challenge Ministries website</a>' +
                     directionsBtn;
+                sidebarBody.innerHTML = bodyHtml + renderSidebarFooterHint();
                 renderSidebarActionBar(
                     coords ? coords.lat : null,
                     coords ? coords.lng : null,
                     actionsHtml
                 );
-                sidebarBody.innerHTML = bodyHtml + renderSidebarFooterHint();
                 renderSidebarVideo(
                     CMS_SIDEBAR_VIDEO_URL,
                     'cmsSidebarVideoWrap',

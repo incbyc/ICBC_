@@ -85,8 +85,8 @@ FIELD_SPECS: dict[str, FieldSpec] = {
     "role": FieldSpec("Role", widget="select", options=ROLE_OPTIONS, required=True),
     "year_joined": FieldSpec("Year joined"),
     "photo_url": FieldSpec(
-        "Photo path",
-        help="Repo-relative path from upload. Synced to Supabase so the map sidebar can load it.",
+        "Photo URL",
+        help="Uploaded to Supabase Storage when sync is enabled (live map). A local copy is kept for optional Git backup.",
     ),
     "sort_order": FieldSpec("Sort order"),
     "children_count": FieldSpec("Children count", required=True),
@@ -354,6 +354,12 @@ def row_key(row: dict[str, str], unique_keys: tuple[str, ...]) -> tuple[str, ...
     return tuple(normalise_space(row.get(key, "")).lower() for key in unique_keys)
 
 
+def row_key_suffix(key: tuple[str, ...]) -> str:
+    """Stable Streamlit widget suffix for a seed row identity."""
+    parts = [slugify(part) or "x" for part in key]
+    return "-".join(parts) if parts else "record"
+
+
 def record_label(config: TableConfig, row: dict[str, str]) -> str:
     if config.key == "icbc_sites":
         name = row.get("name") or row.get("slug") or "Unnamed site"
@@ -424,15 +430,27 @@ def selectbox_default_index(options: list[str], value: str) -> int:
     return 0
 
 
+def is_remote_media_url(path_value: str) -> bool:
+    value = format_value(path_value)
+    return value.startswith(("http://", "https://"))
+
+
+def local_media_path(path_value: str) -> Path | None:
+    value = format_value(path_value)
+    if not value or is_remote_media_url(value):
+        return None
+    return ROOT / value.replace("\\", "/")
+
+
 def preview_image_if_local(path_value: str, caption: str) -> None:
     if not path_value:
         return
-    candidate = ROOT / path_value
-    if candidate.is_file():
-        st.image(str(candidate), caption=caption, width=160)
+    if is_remote_media_url(path_value):
+        st.image(format_value(path_value), caption=caption, width=160)
         return
-    if path_value.startswith(("http://", "https://")):
-        st.image(path_value, caption=caption, width=160)
+    candidate = local_media_path(path_value)
+    if candidate and candidate.is_file():
+        st.image(str(candidate), caption=caption, width=160)
 
 
 def csv_template_bytes(columns: list[str]) -> bytes:
@@ -511,11 +529,11 @@ def save_staff_photo_bytes(
     candidate.write_bytes(image_bytes)
     relative_path = candidate.relative_to(ROOT).as_posix()
 
-    if replace_existing:
+    if replace_existing and not is_remote_media_url(replace_existing):
         old_path = format_value(replace_existing)
         if old_path and old_path != relative_path:
-            old_file = ROOT / old_path.replace("\\", "/")
-            if old_file.is_file():
+            old_file = local_media_path(old_path)
+            if old_file and old_file.is_file():
                 try:
                     old_file.unlink()
                 except OSError:
@@ -602,9 +620,9 @@ def render_staff_photo_cropper(
         source_bytes = bytes(upload.getvalue())
     elif upload_bytes:
         source_bytes = bytes(upload_bytes)
-    elif existing_path:
-        file_path = ROOT / existing_path
-        if file_path.is_file():
+    elif existing_path and not is_remote_media_url(existing_path):
+        file_path = local_media_path(existing_path)
+        if file_path and file_path.is_file():
             source_bytes = file_path.read_bytes()
 
     if not source_bytes:
@@ -613,11 +631,13 @@ def render_staff_photo_cropper(
 
     st.markdown("#### Portrait crop")
     if st_cropper is None:
-        st.info(
-            "Interactive crop tool is unavailable in this Python environment. "
-            "Using a centered square crop after rotation. "
-            "For manual cropping, run Streamlit with Python 3.8–3.12 and reinstall: "
-            "`pip install --force-reinstall streamlit-cropper`."
+        import sys
+
+        py_ver = f"{sys.version_info.major}.{sys.version_info.minor}"
+        st.warning(
+            f"Interactive crop is unavailable on Python {py_ver} "
+            "(the cropper frontend is missing). Using a centered square crop after rotation. "
+            "**Close Streamlit and run `run_seed_admin.bat`** — it uses Python 3.8–3.12 when installed."
         )
     else:
         st.caption(
@@ -902,6 +922,7 @@ def apply_media_uploads(
     staff_cropped_bytes: bytes | None = None,
     staff_upload_bytes: bytes | None = None,
     existing_photo_url: str = "",
+    sync_client=None,
 ) -> dict[str, str]:
     if config.key == "icbc_sites":
         entity_slug = row.get("slug") or slugify(row.get("name", ""))
@@ -931,8 +952,46 @@ def apply_media_uploads(
                 filename_stem=stem,
                 replace_existing=previous_path,
             )
-            row["photo_url"] = public_media_url(relative_path, repo_slug, branch, url_style) or relative_path
+
+            if sync_client:
+                try:
+                    row["photo_url"] = sync_client.upload_staff_photo(
+                        image_bytes,
+                        row.get("site_slug", ""),
+                        row.get("full_name", ""),
+                    )
+                except Exception as exc:
+                    st.error(
+                        "Could not upload photo to Supabase Storage. "
+                        f"{exc} The photo was still saved locally — try **Save changes** again after checking "
+                        "your service role key and Supabase connection."
+                    )
+                    row["photo_url"] = relative_path
+            elif repo_slug.strip():
+                row["photo_url"] = public_media_url(relative_path, repo_slug, branch, url_style) or relative_path
+            else:
+                row["photo_url"] = relative_path
     return row
+
+
+def staff_photo_save_message(photo_url: str, sync_client) -> None:
+    if not photo_url:
+        return
+    if sync_client and photo_url.startswith(("http://", "https://")):
+        st.info(
+            "Photo uploaded to **Supabase Storage** and synced to the database. "
+            "Hard-refresh the map (Ctrl+F5) to see it — **no GitHub push required**. "
+            "Ask Cursor to push when you want a repo backup."
+        )
+    elif sync_client:
+        st.info(
+            "Photo saved locally and synced to Supabase. Hard-refresh the map (Ctrl+F5) to see it."
+        )
+    else:
+        st.warning(
+            "Photo saved locally only. Turn on **Sync to Supabase on save** (service role key) "
+            "so the live map can load portraits without a GitHub push."
+        )
 
 
 def _pil_jpeg_bytes(pil_image) -> bytes:
@@ -1070,6 +1129,7 @@ def render_edit_existing_panel(
         return
 
     filtered_rows = rows
+    filter_choice = "All ICBC sites"
     if config.key == "staff":
         site_options = sorted({row.get("site_slug", "") for row in rows if row.get("site_slug")})
         display_map = site_display_map(site_rows)
@@ -1097,33 +1157,42 @@ def render_edit_existing_panel(
         return
 
     record_options = [record_label(config, row) for row in filtered_rows]
+    picker_filter_suffix = slugify(filter_choice) if config.key == "staff" else "all"
     selected_label = st.selectbox(
         "Choose record",
         options=record_options,
-        key=f"{config.key}-edit-record-picker",
+        key=f"{config.key}-edit-record-picker-{picker_filter_suffix}",
     )
     selected_row = next(
         row for row, label in zip(filtered_rows, record_options) if label == selected_label
     )
     original_key = row_key(selected_row, config.unique_keys)
+    edit_prefix = f"{config.key}-edit-{row_key_suffix(original_key)}"
+    staff_upload_new = None
+    crop_session_key = f"{edit_prefix}-crop"
+    upload_bytes_key = f"{edit_prefix}-staff-upload-bytes"
+    save_clicked = False
+    delete_clicked = False
+    site_photo_upload = None
+    cover_upload = None
+    staff_photo_upload = None
+    row: dict[str, str] = {}
 
-    if config.key == "icbc_sites":
-        preview_cols = st.columns(2)
-        with preview_cols[0]:
-            preview_image_if_local(selected_row.get("photo_path", ""), "Current site photo")
-        with preview_cols[1]:
-            preview_image_if_local(
-                selected_row.get("cover_image_url", ""),
-                "Current cover image",
-            )
-    elif config.key == "staff":
+    if config.key == "staff":
+        st.markdown("#### Staff details")
+        row = render_form_fields(
+            config,
+            columns,
+            site_rows,
+            key_prefix=edit_prefix,
+            defaults=selected_row,
+        )
+        st.markdown("#### Staff photo")
         preview_image_if_local(selected_row.get("photo_url", ""), "Current staff photo")
-        crop_session_key = f"{config.key}-edit-crop-{original_key}"
-        upload_bytes_key = f"{config.key}-edit-staff-upload-bytes-{original_key}"
         staff_upload_new = st.file_uploader(
             "Upload a new staff photo (optional)",
             type=["png", "jpg", "jpeg", "webp"],
-            key=f"{config.key}-edit-staff-upload-{original_key}",
+            key=f"{edit_prefix}-staff-upload",
         )
         if staff_upload_new is not None:
             st.session_state[upload_bytes_key] = staff_upload_new.getvalue()
@@ -1134,25 +1203,50 @@ def render_edit_existing_panel(
             upload=staff_upload_new,
             upload_bytes=None if staff_upload_new is not None else pending_upload_bytes,
         )
-
-    with st.form(f"{config.key}-edit-form"):
-        row = render_form_fields(
-            config,
-            columns,
-            site_rows,
-            key_prefix=f"{config.key}-edit",
-            defaults=selected_row,
-        )
-        site_photo_upload, cover_upload, staff_photo_upload = render_media_uploads(
-            config,
-            key_prefix=f"{config.key}-edit",
-        )
-
+        st.caption("When the crop looks good, save below to upload to Supabase and update the CSV.")
         action_cols = st.columns([2, 1])
         with action_cols[0]:
-            save_clicked = st.form_submit_button("Save changes", type="primary")
+            save_clicked = st.button(
+                "Save changes",
+                type="primary",
+                key=f"{edit_prefix}-save",
+                use_container_width=True,
+            )
         with action_cols[1]:
-            delete_clicked = st.form_submit_button("Delete record")
+            delete_clicked = st.button(
+                "Delete record",
+                key=f"{edit_prefix}-delete",
+                use_container_width=True,
+            )
+    else:
+        if config.key == "icbc_sites":
+            preview_cols = st.columns(2)
+            with preview_cols[0]:
+                preview_image_if_local(selected_row.get("photo_path", ""), "Current site photo")
+            with preview_cols[1]:
+                preview_image_if_local(
+                    selected_row.get("cover_image_url", ""),
+                    "Current cover image",
+                )
+
+        with st.form(f"{edit_prefix}-form"):
+            row = render_form_fields(
+                config,
+                columns,
+                site_rows,
+                key_prefix=edit_prefix,
+                defaults=selected_row,
+            )
+            site_photo_upload, cover_upload, staff_photo_upload = render_media_uploads(
+                config,
+                key_prefix=edit_prefix,
+            )
+
+            action_cols = st.columns([2, 1])
+            with action_cols[0]:
+                save_clicked = st.form_submit_button("Save changes", type="primary")
+            with action_cols[1]:
+                delete_clicked = st.form_submit_button("Delete record")
 
     if delete_clicked:
         if delete_row_by_key(config, columns, original_key):
@@ -1172,8 +1266,8 @@ def render_edit_existing_panel(
     staff_upload_bytes = None
     existing_photo_url = ""
     if config.key == "staff":
-        staff_crop_bytes = st.session_state.get(f"{config.key}-edit-crop-{original_key}")
-        staff_upload_bytes = st.session_state.get(f"{config.key}-edit-staff-upload-bytes-{original_key}")
+        staff_crop_bytes = st.session_state.get(crop_session_key)
+        staff_upload_bytes = st.session_state.get(upload_bytes_key)
         existing_photo_url = selected_row.get("photo_url", "")
     row = apply_media_uploads(
         config,
@@ -1189,6 +1283,7 @@ def render_edit_existing_panel(
         staff_cropped_bytes=staff_crop_bytes,
         staff_upload_bytes=staff_upload_bytes,
         existing_photo_url=existing_photo_url,
+        sync_client=get_supabase_sync_client(),
     )
 
     errors = validate_rows(config, [row])
@@ -1211,14 +1306,10 @@ def render_edit_existing_panel(
         else:
             st.warning("Add latitude and longitude so the site appears on the map.")
     if config.key == "staff" and row.get("photo_url"):
-        st.info(
-            "Staff photo saved to "
-            f"`{row['photo_url']}`. With **Sync to Supabase on save** enabled, "
-            "hard-refresh the map page (Ctrl+F5) to see the new portrait."
-        )
+        staff_photo_save_message(row.get("photo_url", ""), get_supabase_sync_client())
     if config.key == "staff":
-        st.session_state.pop(f"{config.key}-edit-crop-{original_key}", None)
-        st.session_state.pop(f"{config.key}-edit-staff-upload-bytes-{original_key}", None)
+        st.session_state.pop(crop_session_key, None)
+        st.session_state.pop(upload_bytes_key, None)
     st.rerun()
 
 
@@ -1234,7 +1325,24 @@ def render_add_new_panel(
     staff_add_upload = None
     staff_add_crop_key = f"{config.key}-add-crop"
     staff_add_upload_bytes_key = f"{config.key}-add-staff-upload-bytes"
+    submitted = False
+    site_photo_upload = None
+    cover_upload = None
+    staff_photo_upload = None
+    row: dict[str, str] = {}
+
+    st.subheader(f"Add new {config.title}")
+
     if config.key == "staff":
+        st.markdown("#### Staff details")
+        row = render_form_fields(
+            config,
+            columns,
+            site_rows,
+            key_prefix=f"{config.key}-add",
+            defaults={},
+        )
+        st.markdown("#### Staff photo")
         staff_add_upload = st.file_uploader(
             "Staff photo (optional — crop before saving)",
             type=["png", "jpg", "jpeg", "webp"],
@@ -1248,21 +1356,26 @@ def render_add_new_panel(
                 upload=staff_add_upload,
                 upload_bytes=None if staff_add_upload is not None else st.session_state.get(staff_add_upload_bytes_key),
             )
-
-    with st.form(f"{config.key}-add-form", clear_on_submit=True):
-        st.subheader(f"Add new {config.title}")
-        row = render_form_fields(
-            config,
-            columns,
-            site_rows,
-            key_prefix=f"{config.key}-add",
-            defaults={},
+        submitted = st.button(
+            f"Add {config.title} row",
+            type="primary",
+            key=f"{config.key}-add-submit",
+            use_container_width=True,
         )
-        site_photo_upload, cover_upload, staff_photo_upload = render_media_uploads(
-            config,
-            key_prefix=f"{config.key}-add",
-        )
-        submitted = st.form_submit_button(f"Add {config.title} row", type="primary")
+    else:
+        with st.form(f"{config.key}-add-form", clear_on_submit=True):
+            row = render_form_fields(
+                config,
+                columns,
+                site_rows,
+                key_prefix=f"{config.key}-add",
+                defaults={},
+            )
+            site_photo_upload, cover_upload, staff_photo_upload = render_media_uploads(
+                config,
+                key_prefix=f"{config.key}-add",
+            )
+            submitted = st.form_submit_button(f"Add {config.title} row", type="primary")
 
     if not submitted:
         return
@@ -1287,6 +1400,7 @@ def render_add_new_panel(
         url_style=url_style,
         staff_cropped_bytes=staff_crop_bytes,
         staff_upload_bytes=staff_upload_bytes,
+        sync_client=get_supabase_sync_client(),
     )
 
     errors = validate_rows(config, [row])
@@ -1311,6 +1425,8 @@ def render_add_new_panel(
     if config.key == "staff":
         st.session_state.pop(staff_add_crop_key, None)
         st.session_state.pop(staff_add_upload_bytes_key, None)
+        if row.get("photo_url"):
+            staff_photo_save_message(row.get("photo_url", ""), get_supabase_sync_client())
     st.rerun()
 
 
@@ -1497,7 +1613,7 @@ def sidebar_settings():
         value=bool(service_role_key),
         help=(
             "When enabled, rows are upserted to Supabase on save/delete. "
-            "Staff photo paths are included; ICBC site marker/cover images stay local only."
+            "Staff photos upload to Supabase Storage (live map — no GitHub push needed)."
         ),
     )
     sync_client = build_sync_client(supabase_url, service_role_key) if sync_enabled else None
@@ -1506,24 +1622,31 @@ def sidebar_settings():
         st.sidebar.warning("Enter the service role key to enable Supabase sync.")
 
     repo_slug = st.sidebar.text_input(
-        "GitHub repo slug",
+        "GitHub repo slug (optional backup)",
         value="",
-        help="Optional. Example: `your-org/your-repo`.",
+        help="Only needed if you want GitHub URLs instead of Supabase when sync is off.",
     )
-    branch = st.sidebar.text_input("GitHub branch", value="main")
-    url_style_label = st.sidebar.selectbox("Media URL style", options=list(URL_STYLE_OPTIONS.keys()))
+    branch = st.sidebar.text_input("GitHub branch (optional)", value="main")
+    url_style_label = st.sidebar.selectbox(
+        "GitHub media URL style (optional)",
+        options=list(URL_STYLE_OPTIONS.keys()),
+    )
     media_root = st.sidebar.text_input(
-        "Repo media folder",
+        "Local media folder",
         value=DEFAULT_MEDIA_DIR,
-        help="Uploaded files are copied into this folder inside the repo.",
+        help="Local backup copy of uploads (commit via Cursor when you choose).",
     )
 
     cleaned_media_root = media_root.strip("/\\")
-    example_path = f"{cleaned_media_root}/sites/example/photo.jpg"
-    st.sidebar.markdown("### Media strategy")
+    example_path = f"{cleaned_media_root}/staff/example-site/pastor.jpg"
+    st.sidebar.markdown("### Photos")
     st.sidebar.write(
-        "Staff photos are saved locally and the path is synced to Supabase for the map. "
-        "ICBC site marker and cover images stay local only (not pushed to Supabase)."
+        "**Staff portraits:** uploaded to Supabase Storage when sync is on — the map loads them immediately. "
+        "A local copy is kept under the folder above for optional Git backup later.\n\n"
+        "**ICBC site / cover images:** local repo only (not synced to Supabase)."
+    )
+    st.sidebar.caption(
+        "First time? Run `supabase/storage_setup.sql` once in the Supabase SQL Editor."
     )
     st.sidebar.code(example_path)
 
@@ -1534,8 +1657,8 @@ def main() -> None:
     st.set_page_config(page_title="ICBC Seed Admin", layout="wide")
     st.title("ICBC Seed Admin")
     st.caption(
-        "Edit local `supabase/seed/*.csv` files. Images are stored locally; enable "
-        "**Sync text to Supabase on save** to push text fields live (requires service role key)."
+        "Edit local `supabase/seed/*.csv` files. With **Sync to Supabase on save**, staff photos go to "
+        "Supabase Storage and appear on the live map without a GitHub push."
     )
 
     repo_slug, branch, url_style, media_root = sidebar_settings()

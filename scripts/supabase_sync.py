@@ -1,10 +1,14 @@
 """Push seed-admin rows to Supabase (requires service_role key — not the anon key)."""
 from __future__ import annotations
 
+import hashlib
 import re
 from typing import Any
 
 DEFAULT_SUPABASE_URL = "https://oalwyosxclspdkwmivfb.supabase.co"
+STAFF_PHOTOS_BUCKET = "staff-photos"
+STAFF_PHOTO_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"]
+STAFF_PHOTO_SIZE_LIMIT = 5 * 1024 * 1024
 
 
 def normalise_church_name(raw: str) -> str:
@@ -19,6 +23,12 @@ def _text(value: Any) -> str:
     if value is None:
         return ""
     return str(value).strip()
+
+
+def _slugify(value: Any) -> str:
+    text = _text(value).lower()
+    text = re.sub(r"[^a-z0-9]+", "-", text)
+    return text.strip("-") or "staff"
 
 
 def _int_or_none(value: Any) -> int | None:
@@ -101,8 +111,68 @@ class SupabaseSeedSync:
     def __init__(self, url: str, service_role_key: str) -> None:
         create_client = _import_create_client()
 
-        self.client = create_client(url.rstrip("/"), service_role_key)
+        self.url = url.rstrip("/")
+        self.client = create_client(self.url, service_role_key)
         self._sites: list[dict[str, Any]] | None = None
+
+    def staff_photo_public_url(self, object_path: str) -> str:
+        clean_path = object_path.strip("/")
+        return f"{self.url}/storage/v1/object/public/{STAFF_PHOTOS_BUCKET}/{clean_path}"
+
+    def ensure_staff_photos_bucket(self) -> None:
+        """Create the public staff-photos bucket if the project has none yet."""
+        try:
+            buckets = self.client.storage.list_buckets() or []
+        except Exception as exc:
+            raise RuntimeError(f"Could not list Supabase Storage buckets: {exc}") from exc
+
+        if any(getattr(bucket, "name", "") == STAFF_PHOTOS_BUCKET for bucket in buckets):
+            return
+
+        try:
+            self.client.storage.create_bucket(
+                STAFF_PHOTOS_BUCKET,
+                options={
+                    "public": True,
+                    "file_size_limit": STAFF_PHOTO_SIZE_LIMIT,
+                    "allowed_mime_types": STAFF_PHOTO_MIME_TYPES,
+                },
+            )
+        except Exception as exc:
+            message = str(exc).lower()
+            if "already exists" in message or "duplicate" in message:
+                return
+            raise RuntimeError(
+                "Could not create the `staff-photos` storage bucket. "
+                "Run `supabase/storage_setup.sql` in the Supabase SQL Editor, "
+                f"or check project permissions. Details: {exc}"
+            ) from exc
+
+    def upload_staff_photo(
+        self,
+        image_bytes: bytes,
+        site_slug: str,
+        full_name: str,
+    ) -> str:
+        if not image_bytes:
+            raise ValueError("Staff photo upload requires image bytes.")
+        self.ensure_staff_photos_bucket()
+        site_part = _slugify(site_slug) or "site"
+        name_part = _slugify(full_name) or "portrait"
+        content_id = hashlib.md5(image_bytes).hexdigest()[:10]
+        object_path = f"{site_part}/{name_part}-{content_id}.jpg"
+        bucket = self.client.storage.from_(STAFF_PHOTOS_BUCKET)
+        try:
+            bucket.upload(
+                object_path,
+                image_bytes,
+                file_options={"content-type": "image/jpeg", "upsert": "true"},
+            )
+        except Exception as exc:
+            raise RuntimeError(
+                f"Supabase Storage upload failed for `{object_path}`: {exc}"
+            ) from exc
+        return self.staff_photo_public_url(object_path)
 
     def _load_sites(self) -> list[dict[str, Any]]:
         if self._sites is None:
