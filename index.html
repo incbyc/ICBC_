@@ -3531,10 +3531,6 @@
             return m ? m[1] : null;
         }
 
-        function buildYouTubeWatchUrl(videoId) {
-            return 'https://www.youtube.com/watch?v=' + encodeURIComponent(videoId);
-        }
-
         function buildYouTubeEmbedSrc(videoId) {
             var parts = [
                 'rel=0',
@@ -3554,24 +3550,10 @@
                 encodeURIComponent(videoId) + '?' + parts.join('&');
         }
 
-        function youtubeButtonIconHtml() {
-            return '<span class="sidebar-youtube-icon" aria-hidden="true">' +
-                '<svg viewBox="0 0 24 24" focusable="false" role="img">' +
-                '<path fill="currentColor" d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>' +
-                '</svg></span>';
-        }
-
-        function renderSidebarYouTubeButton(watchUrl) {
-            return '<a href="' + escapeHtml(watchUrl) +
-                '" target="_blank" rel="noopener noreferrer" class="sidebar-youtube-btn">' +
-                youtubeButtonIconHtml() + ' Watch on YouTube</a>';
-        }
-
-        function renderSidebarVideoFallback(wrap, videoId) {
-            wrap.style.display = '';
-            wrap.innerHTML = '<div class="sidebar-video-fallback-bar">' +
-                renderSidebarYouTubeButton(buildYouTubeWatchUrl(videoId)) + '</div>';
-            return true;
+        function renderSidebarVideoFallback(wrap) {
+            wrap.innerHTML = '';
+            wrap.style.display = 'none';
+            return false;
         }
 
         function renderSidebarVideo(videoUrl, wrapId, iframeTitle) {
@@ -3585,18 +3567,15 @@
             }
 
             if (!canEmbedHostedVideo()) {
-                return renderSidebarVideoFallback(wrap, videoId);
+                return renderSidebarVideoFallback(wrap);
             }
 
             wrap.style.display = '';
             var src = buildYouTubeEmbedSrc(videoId);
-            var watchUrl = buildYouTubeWatchUrl(videoId);
             wrap.innerHTML = '<div class="sidebar-video-frame">' +
                 '<iframe src="' + escapeHtml(src) + '" title="' + escapeHtml(iframeTitle || 'Site video') + '" ' +
                 'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" ' +
-                'referrerpolicy="origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>' +
-                '<div class="sidebar-video-fallback-bar">' +
-                renderSidebarYouTubeButton(watchUrl) + '</div>';
+                'referrerpolicy="origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>';
             return true;
         }
 
