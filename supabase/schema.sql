@@ -70,6 +70,8 @@ create table if not exists public.staff (
     role text not null,
     year_joined integer,
     photo_url text default '',
+    spouse_name text default '',
+    children_count integer,
     sort_order integer default 0,
     created_at timestamptz not null default now(),
     constraint staff_role_check check (
@@ -173,6 +175,19 @@ create table if not exists public.maize_buyback_records (
     created_at timestamptz not null default now(),
     unique (site_id, year)
 );
+
+create table if not exists public.site_rainfall_monthly (
+    id uuid primary key default gen_random_uuid(),
+    site_id uuid not null references public.icbc_sites (id) on delete cascade,
+    month integer not null check (month between 1 and 12),
+    month_label text default '',
+    rainfall_mm numeric(8, 1) not null default 0,
+    temperature_c numeric(5, 1),
+    unique (site_id, month)
+);
+
+create index if not exists site_rainfall_monthly_site_id_idx
+    on public.site_rainfall_monthly (site_id, month);
 
 create table if not exists public.weekly_stats (
     id uuid primary key default gen_random_uuid(),
@@ -705,6 +720,8 @@ select
     p.full_name as pastor_name,
     p.description as pastor_description,
     p.photo_url as pastor_photo_url,
+    p.spouse_name as pastor_spouse_name,
+    p.children_count as pastor_children_count,
     p.year_joined as pastor_year_joined,
     (select count(*)::integer from public.staff st where st.site_id = s.id) as staff_count
 from public.icbc_sites s
@@ -726,6 +743,8 @@ select
     st.role,
     st.year_joined,
     st.photo_url,
+    st.spouse_name,
+    st.children_count,
     st.sort_order
 from public.staff st
 join public.icbc_sites s on s.id = st.site_id
@@ -802,6 +821,7 @@ group by s.id, s.slug, s.name;
 grant select on public.icbc_site_sidebar to anon, authenticated;
 grant select on public.icbc_site_staff to anon, authenticated;
 grant select on public.icbc_site_stats_summary to anon, authenticated;
+grant select on public.site_rainfall_monthly to anon, authenticated;
 
 -- ---------------------------------------------------------------------------
 -- Row Level Security (public read for the static site)

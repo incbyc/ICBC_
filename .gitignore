@@ -11,6 +11,10 @@ secrets.json
 config/supabase-local.js
 data/supabase-local.js
 
+# --- Private source documents (extract to supabase/seed/ via scripts) ---
+Profiles/
+index2.html
+
 # --- Python ---
 __pycache__/
 *.py[cod]

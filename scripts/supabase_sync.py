@@ -207,6 +207,8 @@ class SupabaseSeedSync:
             return self._sync_ploughing(row)
         if table_key == "maize_buyback_records":
             return self._sync_maize(row)
+        if table_key == "rainfall_monthly":
+            return self._sync_rainfall_monthly(row)
         if table_key == "weekly_stats":
             return self._sync_weekly_stat(row)
         if table_key == "bubele_care_sites":
@@ -272,6 +274,16 @@ class SupabaseSeedSync:
                 .execute()
             )
             return "Deleted maize buy-back record from Supabase."
+        if table_key == "rainfall_monthly":
+            site_id = self._require_site_id(row.get("site_slug", ""))
+            (
+                self.client.table("site_rainfall_monthly")
+                .delete()
+                .eq("site_id", site_id)
+                .eq("month", _int_or_none(row.get("month")))
+                .execute()
+            )
+            return "Deleted rainfall row from Supabase."
         if table_key == "weekly_stats":
             site_id = self._site_id_for_church(row.get("church", ""))
             if not site_id:
@@ -343,6 +355,8 @@ class SupabaseSeedSync:
             "role": _text(row.get("role")),
             "year_joined": _int_or_none(row.get("year_joined")),
             "photo_url": _text(row.get("photo_url")),
+            "spouse_name": _text(row.get("spouse_name")),
+            "children_count": _int_or_none(row.get("children_count")),
             "sort_order": _int_or_none(row.get("sort_order")) or 0,
         }
         self.client.table("staff").upsert(
@@ -416,6 +430,21 @@ class SupabaseSeedSync:
             on_conflict="site_id,year",
         ).execute()
         return f"Synced maize buy-back year `{payload['year']}` to Supabase."
+
+    def _sync_rainfall_monthly(self, row: dict[str, str]) -> str:
+        site_id = self._require_site_id(row.get("site_slug", ""))
+        payload = {
+            "site_id": site_id,
+            "month": _int_or_none(row.get("month")) or 0,
+            "month_label": _text(row.get("month_label")),
+            "rainfall_mm": _float_or_none(row.get("rainfall_mm")) or 0,
+            "temperature_c": _float_or_none(row.get("temperature_c")),
+        }
+        self.client.table("site_rainfall_monthly").upsert(
+            payload,
+            on_conflict="site_id,month",
+        ).execute()
+        return f"Synced rainfall month `{payload['month']}` to Supabase."
 
     def _sync_weekly_stat(self, row: dict[str, str]) -> str:
         site_id = self._site_id_for_church(row.get("church", ""))

@@ -17,13 +17,45 @@ The **map** (`index.html` on GitHub Pages) uses the Supabase **anon** key in the
 - Do **not** put the **service_role** key in `index.html`, JavaScript, or any committed file.
 - Run **Streamlit Seed Admin** only on your machine; it uses the service role locally to sync CSV seed data to Supabase.
 
+## GitHub repository settings (recommended)
+
+On **https://github.com/incbyc/ICBC_** → Settings:
+
+### Protect your code (who can change `main`)
+
+1. **Settings → Collaborators** — only add people who need write access.
+2. **Settings → Branches → Branch protection rules** → Add rule for `main`:
+   - Require a pull request before merging (recommended if others contribute).
+   - Require status checks to pass — select **Secret scan** (from `.github/workflows/secret-scan.yml`).
+   - Do not allow bypassing the rule (including admins), if you want maximum safety.
+3. **Settings → General → Pull Requests** — enable “Allow squash merging” if you prefer clean history.
+
+### Protect secrets and dependencies
+
+4. **Settings → Code security and analysis** — enable:
+   - **Secret scanning** (alerts if keys are pushed).
+   - **Push protection** (blocks pushes that contain known secret patterns).
+   - **Dependabot alerts** and **Dependabot security updates** (works with `.github/dependabot.yml`).
+5. **Settings → Actions → General** — “Workflow permissions”: read-only unless a workflow needs write access.
+
+### Your account
+
+6. Enable **two-factor authentication (2FA)** on your GitHub account (Settings → Password and authentication).
+7. Store Supabase **service_role** only in `.streamlit/secrets.toml` on your PC — never in GitHub Secrets for this static site unless you add a trusted CI deploy that needs it.
+
+### Supabase (database)
+
+8. **Project Settings → API** — confirm only the **anon** key is in `index.html`; rotate **service_role** if it was ever committed.
+9. **Authentication → Policies** — RLS in `supabase/schema.sql` allows public **SELECT** only; writes go through Seed Admin with service_role locally.
+10. **Storage** — staff photo bucket should allow public read, not public write (see `supabase/storage_setup.sql`).
+
 ## Before every push
 
 ```bash
 python scripts/check_secrets.py
 ```
 
-This blocks commits/pushes if a service-role JWT or other sensitive patterns appear in tracked files.
+This blocks commits/pushes if a service-role JWT or other sensitive patterns appear in tracked files. CI runs the same check on every push to `main`.
 
 ## If a secret was ever committed
 
@@ -37,11 +69,4 @@ This blocks commits/pushes if a service-role JWT or other sensitive patterns app
 2. CSV changes live under `supabase/seed/` — commit those with `git` (no secrets in CSVs).
 3. Enable **Sync to Supabase on save** only when `.streamlit/secrets.toml` is configured.
 4. Push to GitHub when ready; GitHub Pages serves the static map only (no server-side secrets).
-
-## GitHub repository settings (recommended)
-
-On the new repo, enable:
-
-- **Secret scanning** (Settings → Code security)
-- **Dependabot alerts** (Settings → Code security)
-- Branch protection on `main` (optional): require PR reviews before merge
+5. Keep raw Word profiles in `Profiles/` locally — that folder is gitignored; use `scripts/extract_icbc_profiles.py` to update seed CSVs.

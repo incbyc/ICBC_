@@ -887,6 +887,70 @@
         .cms-dash-section.theme-network .cms-dash-section-icon { background: linear-gradient(135deg, #00695c, #26a69a); }
         .cms-dash-section.theme-network .cms-dash-stat-icon { background: #e0f2f1; color: #00695c; }
 
+        .cms-dash-trends-wrap {
+            margin-top: 4px;
+        }
+
+        .cms-trend-grid {
+            display: grid;
+            gap: 14px;
+        }
+
+        .site-sidebar.expanded .cms-trend-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .cms-trend-chart {
+            padding: 12px 10px 10px;
+            border-radius: 10px;
+            background: #fff;
+            border: 1px solid #eceff1;
+        }
+
+        .cms-trend-chart-title {
+            margin: 0 0 2px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #37474f;
+        }
+
+        .cms-trend-chart-sub {
+            margin: 0 0 8px;
+            font-size: 10px;
+            color: #78909c;
+            line-height: 1.35;
+        }
+
+        .cms-trend-svg {
+            width: 100%;
+            height: 88px;
+            display: block;
+        }
+
+        .cms-trend-line {
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            vector-effect: non-scaling-stroke;
+        }
+
+        .cms-trend-area {
+            stroke: none;
+        }
+
+        .cms-trend-x {
+            font-size: 7px;
+            fill: #90a4ae;
+        }
+
+        .cms-trend-latest {
+            margin: 6px 0 0;
+            font-size: 10px;
+            color: #546e7a;
+            font-weight: 600;
+        }
+
         /* ===== NETWORK-WIDE ICBC STATS PANEL ===== */
         .network-stats-control {
             font-family: Roboto, Arial, sans-serif;
@@ -1996,6 +2060,103 @@
             font-size: 22px;
         }
 
+        .sidebar-pastor-hero-family {
+            margin: 4px 0 0;
+            font-size: 12px;
+            color: #5d4037;
+            line-height: 1.45;
+        }
+
+        .sidebar-rainfall-chart {
+            margin-top: 8px;
+            padding: 10px 8px 4px;
+            border-radius: 10px;
+            background: linear-gradient(180deg, #f7fbff 0%, #eef6fc 100%);
+            border: 1px solid #d7e8f5;
+        }
+
+        .sidebar-rainfall-legend {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            font-size: 11px;
+            color: #546e7a;
+            margin-bottom: 8px;
+        }
+
+        .sidebar-rainfall-legend span {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .sidebar-rainfall-legend i {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+        }
+
+        .sidebar-rainfall-legend .rain-key {
+            background: linear-gradient(180deg, #4fc3f7 0%, #0288d1 100%);
+        }
+
+        .sidebar-rainfall-legend .temp-key {
+            background: #ef6c00;
+            border-radius: 50%;
+        }
+
+        .sidebar-rainfall-bars {
+            display: grid;
+            grid-template-columns: repeat(12, minmax(0, 1fr));
+            gap: 4px;
+            align-items: end;
+            height: 120px;
+            position: relative;
+        }
+
+        .sidebar-rainfall-bar-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            height: 100%;
+            position: relative;
+        }
+
+        .sidebar-rainfall-bar {
+            width: 100%;
+            max-width: 18px;
+            border-radius: 4px 4px 2px 2px;
+            background: linear-gradient(180deg, #4fc3f7 0%, #0288d1 100%);
+            min-height: 2px;
+        }
+
+        .sidebar-rainfall-temp-dot {
+            position: absolute;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #ef6c00;
+            border: 1px solid #fff;
+            box-shadow: 0 0 0 1px rgba(239, 108, 0, 0.35);
+            left: 50%;
+            transform: translate(-50%, 50%);
+        }
+
+        .sidebar-rainfall-month {
+            margin-top: 6px;
+            font-size: 9px;
+            color: #78909c;
+            text-align: center;
+        }
+
+        .sidebar-rainfall-note {
+            margin: 8px 0 0;
+            font-size: 11px;
+            color: #78909c;
+        }
+
         .sidebar-pastor-hero-role {
             margin: 0;
             font-size: 13px;
@@ -2778,6 +2939,18 @@
             margin-top: 10px;
         }
 
+        .sidebar-footer-youtube {
+            display: flex;
+            justify-content: center;
+            margin: 0 0 10px;
+        }
+
+        .sidebar-footer-youtube .sidebar-btn-nav {
+            width: 100%;
+            max-width: 320px;
+            justify-content: center;
+        }
+
         .sidebar-hint {
             font-size: 11px;
             color: #9aa0a6;
@@ -2994,6 +3167,7 @@
         <script src="js/rbush.min.js"></script>
         <script src="js/labelgun.min.js"></script>
         <script src="js/labels.js"></script>
+        <script src="js/icbc-site-profiles-data.js"></script>
         <script src="js/icbc-search.js"></script>
         <script src="js/icbc-catchment.js"></script>
         <script src="js/leaflet-measure.js"></script>
@@ -3036,7 +3210,8 @@
 
         var SUPABASE_URL = 'https://oalwyosxclspdkwmivfb.supabase.co';
         var CMS_SIDEBAR_VIDEO_URL =
-            'https://www.youtube.com/watch?v=_FwCSa3g1n8&list=PLuBdohRrAcEUF-Vpi6jmoG_I4rDlapZ_i&index=12';
+            'https://www.youtube.com/watch?v=R8ofIlVolzY';
+        var ICBC_YOUTUBE_CHANNEL_URL = 'https://www.youtube.com/@icbcscms133';
         var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9hbHd5b3N4Y2xzcGRrd21pdmZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4NzQxNDEsImV4cCI6MjA5NTQ1MDE0MX0.qn2-ZaSx1J7N8mOpILvPbFAxGB1en5Qaff70WK1TJYA';
 
         function supabaseHeaders() {
@@ -3487,6 +3662,15 @@
                 '<p class="sidebar-hint">Click another marker on the map to switch sites</p></div>';
         }
 
+        function renderIcbcSidebarFooter() {
+            return '<div class="sidebar-footer-hint">' +
+                '<div class="sidebar-footer-youtube">' +
+                '<a href="' + escapeHtml(ICBC_YOUTUBE_CHANNEL_URL) +
+                '" target="_blank" rel="noopener noreferrer" class="sidebar-btn-nav">' +
+                '<i class="fab fa-youtube" aria-hidden="true"></i> ICBC on YouTube</a></div>' +
+                '<p class="sidebar-hint">Click another marker on the map to switch sites</p></div>';
+        }
+
         function getLayerLatLng(layer) {
             if (!layer || !layer.getLatLng) return null;
             var ll = layer.getLatLng();
@@ -3620,11 +3804,7 @@
                 '</div>';
 
             var bodyHtml = '';
-            var actionsHtml = '';
             var coords = getLayerLatLng(layer);
-            var directionsBtn = coords
-                ? sidebarDirectionsButton(coords.lat, coords.lng)
-                : '';
 
             if (kind === 'icbc') {
                 var pastorPhoto = buildImagePath(props['Pastors Photo']) ||
@@ -3646,16 +3826,15 @@
                     '<div id="sidebarDashboard" class="sidebar-dashboard"></div>' +
                     '</div></div>';
 
-                actionsHtml = directionsBtn;
-
-                sidebarBody.innerHTML = bodyHtml + renderSidebarFooterHint();
+                sidebarBody.innerHTML = bodyHtml + renderIcbcSidebarFooter();
                 renderSidebarActionBar(
                     coords ? coords.lat : null,
                     coords ? coords.lng : null,
-                    actionsHtml
+                    ''
                 );
                 sidebarBody.dataset.pastorPhoto = pastorPhoto || '';
                 sidebarBody.dataset.pastorName = props['Pastor'] || '';
+                sidebarBody.dataset.siteSlug = props._slug || slugifyForApi(props['Site Name'] || '');
                 renderSidebarMedia(props['Site Link'] || '', '');
 
                 var localDashboard = buildDashboardFromProps(
@@ -3670,14 +3849,33 @@
                     year_constructed: establishedRaw,
                     in_operation: formatYearsInOperation(establishedRaw)
                 };
+                localDashboard.rainfall = getRainfallRowsForSite(
+                    props._slug || slugifyForApi(props['Site Name'] || '')
+                );
+                ensureSiteProfilesLoaded().then(function () {
+                    localDashboard = injectSiteProgrammeMetrics(
+                        localDashboard,
+                        props._slug || slugifyForApi(props['Site Name'] || '')
+                    );
+                    renderSidebarDashboard(localDashboard);
+                });
 
-                renderSidebarStaff([], {
+                var pastorSeed = {
                     full_name: props['Pastor'],
                     name: props['Pastor'],
                     role: 'Pastor',
                     description: ''
-                }, pastorPhoto);
-                renderSidebarDashboard(localDashboard);
+                };
+                var seedFamily = typeof ICBC_PASTOR_FAMILY_BY_SITE !== 'undefined'
+                    ? ICBC_PASTOR_FAMILY_BY_SITE[String(props._slug || slugifyForApi(props['Site Name'] || '')).trim().toLowerCase()]
+                    : null;
+                if (seedFamily) {
+                    if (seedFamily.spouse_name) pastorSeed.spouse_name = seedFamily.spouse_name;
+                    if (seedFamily.spouse_name && seedFamily.children_count !== '') {
+                        pastorSeed.children_count = seedFamily.children_count;
+                    }
+                }
+                renderSidebarStaff([], pastorSeed, pastorPhoto);
                 enrichSidebarFromApi(props._slug || slugifyForApi(props['Site Name']), localDashboard);
             } else if (kind === 'cms') {
                 bodyHtml +=
@@ -3690,10 +3888,9 @@
                     '<span>ICBC network impact</span></h3>' +
                     '<div class="network-stats-loading" style="padding:16px">Loading network impact…</div></section>' +
                     '</div></div>';
-                actionsHtml =
+                var actionsHtml =
                     '<a href="https://challengeministries.org" target="_blank" rel="noopener" class="sidebar-btn-nav">' +
-                    '<i class="fas fa-external-link-alt" aria-hidden="true"></i> Visit Challenge Ministries website</a>' +
-                    directionsBtn;
+                    '<i class="fas fa-external-link-alt" aria-hidden="true"></i> Visit Challenge Ministries website</a>';
                 sidebarBody.innerHTML = bodyHtml + renderSidebarFooterHint();
                 renderSidebarActionBar(
                     coords ? coords.lat : null,
@@ -3814,6 +4011,108 @@
             return { pastor: pastor, team: team };
         }
 
+        function formatPastorChildrenCount(value) {
+            if (value == null || value === '') return '';
+            var count = Number(value);
+            if (isNaN(count)) return '';
+            return 'Children: ' + count;
+        }
+
+        function getRainfallRowsForSite(siteSlug, apiRows) {
+            if (apiRows && apiRows.length) return apiRows;
+            var key = String(siteSlug || '').trim().toLowerCase();
+            if (typeof ICBC_RAINFALL_BY_SITE !== 'undefined' && ICBC_RAINFALL_BY_SITE[key]) {
+                return ICBC_RAINFALL_BY_SITE[key];
+            }
+            return [];
+        }
+
+        function renderSidebarRainfallChart(siteSlug, rainfallRows) {
+            var rows = rainfallRows || getRainfallRowsForSite(siteSlug);
+            if (!rows.length) return '';
+
+            var maxRain = 0;
+            var minTemp = Infinity;
+            var maxTemp = -Infinity;
+            rows.forEach(function (row) {
+                maxRain = Math.max(maxRain, Number(row.rainfall_mm) || 0);
+                if (row.temperature_c != null && row.temperature_c !== '') {
+                    var temp = Number(row.temperature_c);
+                    minTemp = Math.min(minTemp, temp);
+                    maxTemp = Math.max(maxTemp, temp);
+                }
+            });
+            if (!isFinite(minTemp)) {
+                minTemp = 15;
+                maxTemp = 28;
+            }
+            var tempSpan = Math.max(maxTemp - minTemp, 1);
+
+            var html = '<section class="sidebar-block"><h3 class="sidebar-section-head climate">' +
+                '<i class="fas fa-cloud-rain" aria-hidden="true"></i><span>Rainfall / Temperature</span></h3>' +
+                '<div class="sidebar-rainfall-chart">' +
+                '<div class="sidebar-rainfall-legend">' +
+                '<span><i class="rain-key" aria-hidden="true"></i>Rainfall (mm)</span>' +
+                '<span><i class="temp-key" aria-hidden="true"></i>Avg temp (°C)</span></div>' +
+                '<div class="sidebar-rainfall-bars">';
+
+            rows.forEach(function (row) {
+                var rain = Number(row.rainfall_mm) || 0;
+                var height = Math.max(4, Math.round((rain / Math.max(maxRain, 1)) * 100));
+                var label = row.month_label || '';
+                var tempVal = row.temperature_c != null && row.temperature_c !== ''
+                    ? Number(row.temperature_c)
+                    : null;
+                var tempBottom = tempVal != null
+                    ? Math.round(((tempVal - minTemp) / tempSpan) * 88)
+                    : null;
+                var title = label + ': ' + rain + ' mm' +
+                    (tempVal != null ? ', ' + tempVal + '°C' : '');
+                html += '<div class="sidebar-rainfall-bar-wrap">';
+                if (tempBottom != null) {
+                    html += '<span class="sidebar-rainfall-temp-dot" style="bottom:' +
+                        tempBottom + '%"></span>';
+                }
+                html += '<div class="sidebar-rainfall-bar" style="height:' + height +
+                    '%" title="' + escapeHtml(title) + '"></div>' +
+                    '<span class="sidebar-rainfall-month">' + escapeHtml(label) + '</span></div>';
+            });
+
+            html += '</div><p class="sidebar-rainfall-note">Monthly averages (2015–2024) at site coordinates.</p></div></section>';
+            return html;
+        }
+
+        function applyPastorFamilyFields(staffList, siteSlug, sidebarData) {
+            var seedFamily = typeof ICBC_PASTOR_FAMILY_BY_SITE !== 'undefined'
+                ? ICBC_PASTOR_FAMILY_BY_SITE[String(siteSlug || '').trim().toLowerCase()]
+                : null;
+            (staffList || []).forEach(function (person) {
+                if ((person.role || '') !== 'Pastor') return;
+                if (seedFamily) {
+                    if (!person.spouse_name && seedFamily.spouse_name) {
+                        person.spouse_name = seedFamily.spouse_name;
+                    }
+                    if ((person.children_count == null || person.children_count === '') &&
+                        seedFamily.children_count !== '') {
+                        person.children_count = seedFamily.children_count;
+                    }
+                }
+                if (sidebarData) {
+                    if (!person.spouse_name && sidebarData.pastor_spouse_name) {
+                        person.spouse_name = sidebarData.pastor_spouse_name;
+                    }
+                    if ((person.children_count == null || person.children_count === '') &&
+                        sidebarData.pastor_children_count != null &&
+                        sidebarData.pastor_children_count !== '') {
+                        person.children_count = sidebarData.pastor_children_count;
+                    }
+                }
+                if (!(person.spouse_name || '').trim()) {
+                    person.children_count = '';
+                }
+            });
+        }
+
         function renderSidebarPastorHero(pastor, fallbackPhoto) {
             var root = document.getElementById('sidebarPastorHero');
             if (!root) return;
@@ -3850,6 +4149,14 @@
             html += '<div class="sidebar-pastor-hero-body">' +
                 '<p class="sidebar-pastor-hero-name">' + escapeHtml(name) + '</p>' +
                 '<p class="sidebar-pastor-hero-role">' + escapeHtml(role) + '</p>';
+            if (pastor.spouse_name) {
+                html += '<p class="sidebar-pastor-hero-family">Spouse: ' +
+                    escapeHtml(pastor.spouse_name) + '</p>';
+                var childrenLabel = formatPastorChildrenCount(pastor.children_count);
+                if (childrenLabel) {
+                    html += '<p class="sidebar-pastor-hero-family">' + escapeHtml(childrenLabel) + '</p>';
+                }
+            }
             html += '</div></div></section>';
             root.innerHTML = html;
             var img = root.querySelector('img.sidebar-pastor-hero-photo');
@@ -4069,23 +4376,42 @@
             };
         }
 
-        function computeNetworkStaffTotal(staffRows, preschoolTeachers) {
+        function getNetworkCompassionateCareTotal() {
+            var total = 0;
+            var profiles = typeof ICBC_SITE_PROFILES_BY_SLUG !== 'undefined'
+                ? ICBC_SITE_PROFILES_BY_SLUG
+                : {};
+            Object.keys(profiles).forEach(function (slug) {
+                total += Number(profiles[slug].compassionate_care_members) || 0;
+            });
+            return total;
+        }
+
+        function computeNetworkStaffBreakdown(staffRows, preschoolTeachers) {
             var pastors = 0;
-            var compassionateCare = 0;
             var teachersInStaff = 0;
             (staffRows || []).forEach(function (row) {
                 var role = String(row.role || '');
                 if (role === 'Pastor') pastors += 1;
-                else if (role === 'Compassionate Care') compassionateCare += 1;
                 else if (role === 'Teacher') teachersInStaff += 1;
             });
+            var compassionateCare = getNetworkCompassionateCareTotal();
             var rollup = getNetworkTeacherRollupFromSpreadsheet();
             var teachers = Math.max(
                 Number(preschoolTeachers) || 0,
                 rollup.current_teachers || 0,
                 teachersInStaff
             );
-            return pastors + compassionateCare + teachers;
+            return {
+                pastors: pastors,
+                teachers: teachers,
+                compassionate_care: compassionateCare,
+                total: pastors + compassionateCare + teachers
+            };
+        }
+
+        function computeNetworkStaffTotal(staffRows, preschoolTeachers) {
+            return computeNetworkStaffBreakdown(staffRows, preschoolTeachers).total;
         }
 
         function filterSpreadsheetOnlyTeachers(staffList) {
@@ -4155,27 +4481,6 @@
                 var currentChildren = 0;
                 var sitesWithPreschool = 0;
 
-                Object.keys(bySite).forEach(function (sid) {
-                    var siteRows = bySite[sid].filter(function (row) {
-                        return (Number(row.children_count) || 0) > 0;
-                    });
-                    if (!siteRows.length) return;
-
-                    sitesWithPreschool += 1;
-                    var maxYear = Math.max.apply(null, siteRows.map(function (r) {
-                        return Number(r.year) || 0;
-                    }));
-                    siteRows.forEach(function (row) {
-                        var year = Number(row.year) || 0;
-                        var children = Number(row.children_count) || 0;
-                        if (year < maxYear) {
-                            previousYearsEnrollment += children;
-                        } else if (year === maxYear) {
-                            currentChildren += children;
-                        }
-                    });
-                });
-
                 var minYear = null;
                 var maxYear = null;
                 (rows || []).forEach(function (row) {
@@ -4183,6 +4488,31 @@
                     if (y <= 0) return;
                     if (minYear == null || y < minYear) minYear = y;
                     if (maxYear == null || y > maxYear) maxYear = y;
+                });
+
+                Object.keys(bySite).forEach(function (sid) {
+                    var siteRows = bySite[sid] || [];
+                    if (!siteRows.length) return;
+
+                    siteRows.forEach(function (row) {
+                        var year = Number(row.year) || 0;
+                        var children = Number(row.children_count) || 0;
+                        if (children <= 0 || !maxYear) return;
+                        if (year < maxYear) {
+                            previousYearsEnrollment += children;
+                        }
+                    });
+
+                    var currentYearRow = siteRows.find(function (row) {
+                        return (Number(row.year) || 0) === maxYear;
+                    });
+                    var currentForSite = currentYearRow
+                        ? (Number(currentYearRow.children_count) || 0)
+                        : 0;
+                    if (currentForSite > 0) {
+                        sitesWithPreschool += 1;
+                        currentChildren += currentForSite;
+                    }
                 });
 
                 return {
@@ -4334,6 +4664,217 @@
             return endLabel || startLabel;
         }
 
+        function fetchAllWeeklyStatsPaginated() {
+            var pageSize = 1000;
+            var offset = 0;
+            var all = [];
+
+            function page() {
+                return supabaseRestWithTimeout(
+                    'weekly_stats?select=stat_date,total_attendance,salvations,baptisms' +
+                    '&order=stat_date.asc&limit=' + pageSize + '&offset=' + offset,
+                    30000
+                ).then(function (batch) {
+                    if (!batch || !batch.length) return all;
+                    all = all.concat(batch);
+                    if (batch.length < pageSize) return all;
+                    offset += pageSize;
+                    return page();
+                });
+            }
+
+            return page();
+        }
+
+        function loadWeeklyStatsCsvRows() {
+            return fetch('supabase/seed/weekly_stats.csv')
+                .then(function (res) {
+                    if (!res.ok) throw new Error('weekly_stats.csv not found');
+                    return res.text();
+                })
+                .then(function (text) {
+                    var parseFn = typeof parseCsvRows === 'function'
+                        ? parseCsvRows
+                        : function () { return []; };
+                    var rows = parseFn(text);
+                    if (rows.length < 2) return [];
+                    var headers = rows[0];
+                    var hi = {};
+                    var c;
+                    for (c = 0; c < headers.length; c++) {
+                        hi[headers[c].trim()] = c;
+                    }
+                    var out = [];
+                    var r;
+                    for (r = 1; r < rows.length; r++) {
+                        var cells = rows[r];
+                        out.push({
+                            stat_date: cells[hi.date],
+                            total_attendance: cells[hi.total_attendance],
+                            salvations: cells[hi.salvations],
+                            baptisms: cells[hi.baptisms]
+                        });
+                    }
+                    return out;
+                });
+        }
+
+        function fetchCmsWeeklyTrendData() {
+            return fetchAllWeeklyStatsPaginated()
+                .then(function (rows) {
+                    if (rows && rows.length) return rows;
+                    return loadWeeklyStatsCsvRows();
+                })
+                .catch(function () {
+                    return loadWeeklyStatsCsvRows().catch(function () { return []; });
+                });
+        }
+
+        function cmsTrendMonthLabel(monthKey) {
+            var parts = String(monthKey || '').split('-');
+            if (parts.length < 2) return monthKey;
+            var names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            var monthIndex = parseInt(parts[1], 10) - 1;
+            var monthName = names[monthIndex] || parts[1];
+            return monthName + ' \'' + parts[0].slice(-2);
+        }
+
+        function buildCmsTrendSeries(rawRows) {
+            var byDate = {};
+            (rawRows || []).forEach(function (row) {
+                var date = String(row.stat_date || row.date || '').slice(0, 10);
+                if (!date) return;
+                if (!byDate[date]) {
+                    byDate[date] = { attendance: 0, salvations: 0, baptisms: 0 };
+                }
+                byDate[date].attendance += Number(row.total_attendance) || 0;
+                byDate[date].salvations += Number(row.salvations) || 0;
+                byDate[date].baptisms += Number(row.baptisms) || 0;
+            });
+
+            var byMonth = {};
+            Object.keys(byDate).sort().forEach(function (date) {
+                var month = date.slice(0, 7);
+                var bucket = byDate[date];
+                if (!byMonth[month]) {
+                    byMonth[month] = {
+                        attendanceSum: 0,
+                        weekCount: 0,
+                        salvations: 0,
+                        baptisms: 0
+                    };
+                }
+                byMonth[month].attendanceSum += bucket.attendance;
+                byMonth[month].weekCount += 1;
+                byMonth[month].salvations += bucket.salvations;
+                byMonth[month].baptisms += bucket.baptisms;
+            });
+
+            var cumulativeSalvations = 0;
+            var cumulativeBaptisms = 0;
+            return Object.keys(byMonth).sort().map(function (month) {
+                var entry = byMonth[month];
+                cumulativeSalvations += entry.salvations;
+                cumulativeBaptisms += entry.baptisms;
+                return {
+                    month: month,
+                    label: cmsTrendMonthLabel(month),
+                    avgAttendance: entry.weekCount
+                        ? Math.round(entry.attendanceSum / entry.weekCount)
+                        : 0,
+                    cumulativeSalvations: cumulativeSalvations,
+                    cumulativeBaptisms: cumulativeBaptisms
+                };
+            });
+        }
+
+        function renderCmsTrendLineChart(title, subtitle, series, valueKey, color, format) {
+            if (!series || !series.length) return '';
+            var values = series.map(function (point) {
+                return Number(point[valueKey]) || 0;
+            });
+            var maxVal = Math.max.apply(null, values.concat([1]));
+            var width = 320;
+            var height = 100;
+            var pad = { l: 6, r: 6, t: 10, b: 24 };
+            var innerW = width - pad.l - pad.r;
+            var innerH = height - pad.t - pad.b;
+            var coords = values.map(function (value, index) {
+                var x = pad.l + (values.length > 1
+                    ? (index / (values.length - 1)) * innerW
+                    : innerW / 2);
+                var y = pad.t + innerH - (value / maxVal) * innerH;
+                return {
+                    x: x,
+                    y: y,
+                    label: series[index].label,
+                    value: value
+                };
+            });
+            var linePoints = coords.map(function (point) {
+                return point.x.toFixed(1) + ',' + point.y.toFixed(1);
+            }).join(' ');
+            var areaPoints = pad.l + ',' + (pad.t + innerH) + ' ' + linePoints + ' ' +
+                (pad.l + innerW) + ',' + (pad.t + innerH);
+            var labelStep = Math.max(1, Math.ceil(series.length / 6));
+            var labelsHtml = '';
+            coords.forEach(function (point, index) {
+                if (index % labelStep === 0 || index === coords.length - 1) {
+                    labelsHtml += '<text x="' + point.x.toFixed(1) + '" y="' + (height - 5) +
+                        '" text-anchor="middle" class="cms-trend-x">' +
+                        escapeHtml(point.label) + '</text>';
+                }
+            });
+            var latestValue = format === 'decimal'
+                ? formatMetricValue(values[values.length - 1], 1)
+                : formatMetricValue(values[values.length - 1]);
+
+            return '<div class="cms-trend-chart">' +
+                '<p class="cms-trend-chart-title">' + escapeHtml(title) + '</p>' +
+                (subtitle
+                    ? '<p class="cms-trend-chart-sub">' + escapeHtml(subtitle) + '</p>'
+                    : '') +
+                '<svg viewBox="0 0 ' + width + ' ' + height + '" class="cms-trend-svg" preserveAspectRatio="none" aria-hidden="true">' +
+                '<polygon points="' + areaPoints + '" class="cms-trend-area" fill="' + color + '22"></polygon>' +
+                '<polyline points="' + linePoints + '" class="cms-trend-line" stroke="' + color + '"></polyline>' +
+                labelsHtml +
+                '</svg>' +
+                '<p class="cms-trend-latest">Latest: ' + escapeHtml(String(latestValue)) + '</p>' +
+                '</div>';
+        }
+
+        function renderCmsReachTrendCharts(rawRows) {
+            var series = buildCmsTrendSeries(rawRows);
+            if (!series.length) return '';
+            return '<div class="cms-trend-grid">' +
+                renderCmsTrendLineChart(
+                    'Network attendance',
+                    'Average weekly total across all ICBC sites',
+                    series,
+                    'avgAttendance',
+                    '#c62828',
+                    'integer'
+                ) +
+                renderCmsTrendLineChart(
+                    'Salvations',
+                    'Cumulative total across the network',
+                    series,
+                    'cumulativeSalvations',
+                    '#6a1b9a',
+                    'integer'
+                ) +
+                renderCmsTrendLineChart(
+                    'Baptisms',
+                    'Cumulative total across the network',
+                    series,
+                    'cumulativeBaptisms',
+                    '#0277bd',
+                    'integer'
+                ) +
+                '</div>';
+        }
+
         function fetchCmsStatPeriods() {
             return Promise.all([
                 supabaseRestWithTimeout('weekly_stats?select=stat_date&order=stat_date.asc&limit=1')
@@ -4386,7 +4927,7 @@
                 '<div class="cms-dash-grid">' + statsHtml + '</div></section>';
         }
 
-        function renderCmsNetworkImpactBody(stats, preschool, periods) {
+        function renderCmsNetworkImpactBody(stats, preschool, periods, weeklyTrendRows) {
             var s = stats || {};
             var p = periods || {};
             var html = '';
@@ -4419,6 +4960,26 @@
 
             html += '<div class="cms-dash-body">';
 
+            html += cmsDashSection(
+                'Network staff',
+                'fa-users',
+                'theme-network',
+                'Pastors, pre-school teachers, and compassionate care teams across all ICBC sites',
+                cmsDashStat('fa-user-tie', 'Pastors', formatMetricValue(s.staff_pastors)) +
+                cmsDashStat('fa-chalkboard-teacher', 'Pre-school teachers', formatMetricValue(s.staff_teachers)) +
+                cmsDashStat(
+                    'fa-hands-helping',
+                    'Compassionate care team',
+                    formatMetricValue(s.staff_compassionate_care)
+                ) +
+                cmsDashStat(
+                    'fa-users',
+                    'Total staff',
+                    formatMetricValue(s.total_staff),
+                    'Pastors + pre-school teachers + compassionate care'
+                )
+            );
+
             var worshipPeriod = weeklyPeriod
                 ? 'Statistics cover ' + weeklyPeriod
                 : 'Weekly statistics';
@@ -4436,6 +4997,12 @@
                 cmsDashStat('fa-water', 'Baptisms', formatMetricValue(s.total_baptisms)) +
                 cmsDashStat('fa-home', 'Home visits', formatMetricValue(s.total_home_visits))
             );
+
+            if (weeklyTrendRows && weeklyTrendRows.length) {
+                html += '<div class="cms-dash-trends-wrap">' +
+                    renderCmsReachTrendCharts(weeklyTrendRows) +
+                    '</div>';
+            }
 
             html += cmsDashSection(
                 'Ploughing project',
@@ -4609,26 +5176,40 @@
             var loadToken = ++cmsNetworkLoadToken;
 
             Promise.all([
+                ensureSiteProfilesLoaded(),
                 fetchNetworkStats(),
                 aggregateNetworkPreschoolDetailed().catch(function () { return null; }),
                 fetchCmsStatPeriods().catch(function () { return {}; }),
-                supabaseRestWithTimeout('staff?select=role').catch(function () { return []; })
+                supabaseRestWithTimeout('staff?select=role').catch(function () { return []; }),
+                fetchCmsWeeklyTrendData().catch(function () { return []; })
             ])
                 .then(function (results) {
                     if (loadToken !== cmsNetworkLoadToken) return;
-                    var stats = results[0] || {};
-                    var preschool = results[1];
-                    var periods = results[2];
-                    var staffRows = results[3] || [];
+                    var stats = results[1] || {};
+                    var preschool = results[2];
+                    var periods = results[3];
+                    var staffRows = results[4] || [];
+                    var weeklyTrendRows = results[5] || [];
+                    var compassionateCareTotal = getNetworkCompassionateCareTotal();
+                    var staffBreakdown = computeNetworkStaffBreakdown(
+                        staffRows,
+                        preschool && preschool.current_teachers
+                    );
                     stats = Object.assign({}, stats, {
-                        total_staff: computeNetworkStaffTotal(
-                            staffRows,
-                            preschool && preschool.current_teachers
-                        )
+                        staff_pastors: staffBreakdown.pastors,
+                        staff_teachers: staffBreakdown.teachers,
+                        staff_compassionate_care: staffBreakdown.compassionate_care,
+                        total_staff: staffBreakdown.total,
+                        total_compassionate_care: compassionateCareTotal
                     });
                     var heading = root.querySelector('.sidebar-section-head');
                     var headHtml = heading ? heading.outerHTML : '';
-                    root.innerHTML = headHtml + renderCmsNetworkImpactBody(stats, preschool, periods);
+                    root.innerHTML = headHtml + renderCmsNetworkImpactBody(
+                        stats,
+                        preschool,
+                        periods,
+                        weeklyTrendRows
+                    );
                 })
                 .catch(function (err) {
                     if (loadToken !== cmsNetworkLoadToken) return;
@@ -4697,8 +5278,74 @@
             avg_attendance: true,
             salvations: true,
             baptisms: true,
-            home_visits: true
+            home_visits: true,
+            compassionate_care: true,
+            avg_home_visits_weekly: true
         };
+
+        function getCompassionateCareMemberCount(siteSlug) {
+            var slug = String(siteSlug || '').trim().toLowerCase();
+            if (!slug) return 0;
+
+            var profile = typeof ICBC_SITE_PROFILES_BY_SLUG !== 'undefined'
+                ? ICBC_SITE_PROFILES_BY_SLUG[slug]
+                : null;
+            return profile ? (Number(profile.compassionate_care_members) || 0) : 0;
+        }
+
+        function ensureSiteProfilesLoaded() {
+            if (typeof ICBC_SITE_PROFILES_BY_SLUG !== 'undefined' &&
+                Object.keys(ICBC_SITE_PROFILES_BY_SLUG).length) {
+                return Promise.resolve();
+            }
+            if (typeof initSiteProfilesFromSeed === 'function') {
+                initSiteProfilesFromSeed();
+            }
+            if (typeof ICBC_SITE_PROFILES_BY_SLUG !== 'undefined' &&
+                Object.keys(ICBC_SITE_PROFILES_BY_SLUG).length) {
+                return Promise.resolve();
+            }
+            if (typeof loadSiteProfilesSeed === 'function') {
+                return loadSiteProfilesSeed().catch(function () { });
+            }
+            return Promise.resolve();
+        }
+
+        function injectSiteProgrammeMetrics(dashboard, siteSlug) {
+            dashboard = dashboard || {};
+            dashboard.metrics = (dashboard.metrics || []).slice();
+            var slug = String(siteSlug || '').trim().toLowerCase();
+            if (!slug) return dashboard;
+
+            var cc = getCompassionateCareMemberCount(slug);
+            dashboard.metrics = dashboard.metrics.filter(function (m) {
+                return m.key !== 'compassionate_care';
+            });
+            if (dashboard.site) {
+                dashboard.site = Object.assign({}, dashboard.site, {
+                    compassionate_care_members: cc > 0 ? cc : null
+                });
+            } else if (cc > 0) {
+                dashboard.site = { compassionate_care_members: cc };
+            }
+
+            var avgHv = typeof ICBC_AVG_HOME_VISITS_BY_SLUG !== 'undefined'
+                ? ICBC_AVG_HOME_VISITS_BY_SLUG[slug]
+                : null;
+            dashboard.metrics = dashboard.metrics.filter(function (m) {
+                return m.key !== 'avg_home_visits_weekly';
+            });
+            if (avgHv != null && Number(avgHv) >= 5) {
+                dashboard.metrics.push({
+                    key: 'avg_home_visits_weekly',
+                    title: 'Avg home visits per week',
+                    value: avgHv,
+                    format: 'decimal'
+                });
+            }
+
+            return dashboard;
+        }
 
         function isStatisticsMetric(metric) {
             if (!metric) return false;
@@ -4707,7 +5354,8 @@
             return title.indexOf('attendance') >= 0 ||
                 title.indexOf('salvation') >= 0 ||
                 title.indexOf('baptism') >= 0 ||
-                title.indexOf('home visit') >= 0;
+                title.indexOf('home visit') >= 0 ||
+                title.indexOf('compassionate care') >= 0;
         }
 
         function pickStatisticsMetrics(metrics) {
@@ -4779,6 +5427,14 @@
             if (site.projects) {
                 facts.push({ icon: 'fa-seedling', lbl: 'Projects', val: site.projects });
             }
+            var careCount = Number(site.compassionate_care_members);
+            if (careCount > 0) {
+                facts.push({
+                    icon: 'fa-hands-helping',
+                    lbl: 'Compassionate care team members',
+                    val: careCount
+                });
+            }
             if (!facts.length && !site.about) return '';
 
             var html = '<section class="sidebar-block sidebar-block-keyfacts">' +
@@ -4810,6 +5466,8 @@
             if (!root) return;
             dashboard = dashboard || {};
             var html = '';
+            var siteSlug = (sidebarBody && sidebarBody.dataset.siteSlug) || '';
+            html += renderSidebarRainfallChart(siteSlug, dashboard.rainfall || null);
             var metrics = dashboard.metrics || [];
             var statMetrics = pickStatisticsMetrics(metrics);
             if (statMetrics.length) {
@@ -4929,19 +5587,25 @@
                         ? Number(r.teachers_count) : null
                 };
             }).filter(function (r) {
-                return r.year > 0 && r.children_count > 0;
+                return r.year > 0;
             });
             if (!parsed.length) return null;
 
             var currentYear = Math.max.apply(null, parsed.map(function (r) { return r.year; }));
-            var currentRow = null;
+            var currentRow = parsed.find(function (r) { return r.year === currentYear; }) || null;
+            var withEnrollment = parsed.filter(function (r) {
+                return r.children_count > 0;
+            });
+            if (!withEnrollment.length && !(currentRow && currentRow.children_count === 0)) {
+                return null;
+            }
+
             var previousImpact = 0;
             var totalImpact = 0;
             parsed.forEach(function (r) {
+                if (r.children_count <= 0) return;
                 totalImpact += r.children_count;
-                if (r.year === currentYear) {
-                    currentRow = r;
-                } else if (r.year < currentYear) {
+                if (r.year < currentYear) {
                     previousImpact += r.children_count;
                 }
             });
@@ -4953,7 +5617,7 @@
                 total_children_impacted: totalImpact,
                 teachers_count: currentRow && currentRow.teachers_count != null
                     ? currentRow.teachers_count : null,
-                yearly: parsed.slice().sort(function (a, b) { return a.year - b.year; })
+                yearly: withEnrollment.slice().sort(function (a, b) { return a.year - b.year; })
             };
         }
 
@@ -4966,6 +5630,7 @@
                 ploughing: (dash.ploughing || []).slice(),
                 ploughing_totals: dash.ploughing_totals ? Object.assign({}, dash.ploughing_totals) : null,
                 maize_buyback: (dash.maize_buyback || []).slice(),
+                rainfall: (dash.rainfall || []).slice(),
                 site: dash.site ? Object.assign({}, dash.site) : null
             };
         }
@@ -5051,7 +5716,7 @@
                 });
             }
 
-            return dash;
+            return injectSiteProgrammeMetrics(dash, siteSlug);
         }
 
         function enrichSidebarFromApi(slug, localDashboard) {
@@ -5064,16 +5729,25 @@
                 supabaseRest('icbc_site_sidebar?slug=eq.' + encSlug + '&select=*'),
                 supabaseRest('icbc_site_stats_summary?slug=eq.' + encSlug + '&select=sidebar_metrics,sundays_recorded,avg_attendance'),
                 supabaseRest('icbc_sites?slug=eq.' + encSlug + '&select=id,year_constructed,cover_image_url,video_url,site_link,about,projects,water_source'),
-                supabaseRest('icbc_site_staff?site_slug=eq.' + encSlug + '&select=full_name,role,description,photo_url&order=sort_order')
+                supabaseRest('icbc_site_staff?site_slug=eq.' + encSlug + '&select=full_name,role,description,photo_url,spouse_name,children_count&order=sort_order'),
+                supabaseRest('icbc_site_rainfall?site_slug=eq.' + encSlug + '&select=month,month_label,rainfall_mm,temperature_c&order=month')
+                    .catch(function () { return []; })
             ])
                 .then(function (results) {
                     var sidebar = (results[0] && results[0][0]) || null;
                     var stats = (results[1] && results[1][0]) || null;
                     var site = (results[2] && results[2][0]) || null;
                     var staffList = results[3] || [];
+                    var rainfallRows = results[4] || [];
                     var siteId = site && site.id;
                     if (!siteId) {
-                        return { sidebar: sidebar, stats: stats, site: site, staffList: staffList };
+                        return {
+                            sidebar: sidebar,
+                            stats: stats,
+                            site: site,
+                            staffList: staffList,
+                            rainfallRows: rainfallRows,
+                        };
                     }
                     return Promise.all([
                         supabaseRest('preschool_enrollment?site_id=eq.' + encodeURIComponent(siteId) + '&select=year,children_count,teachers_count&order=year.desc'),
@@ -5085,6 +5759,7 @@
                             stats: stats,
                             site: site,
                             staffList: staffList,
+                            rainfallRows: rainfallRows,
                             preschool_enrollment: programmeRows[0] || [],
                             ploughing: programmeRows[1] || [],
                             maize: programmeRows[2] || []
@@ -5100,6 +5775,7 @@
                         ? { full_name: sidebarBody.dataset.pastorName, role: 'Pastor' }
                         : null;
                     var staffList = filterSpreadsheetOnlyTeachers(data.staffList || []);
+                    applyPastorFamilyFields(staffList, slug, data.sidebar);
                     var apiPastor = null;
                     staffList.forEach(function (person) {
                         if ((person.role || '') === 'Pastor' && !apiPastor) apiPastor = person;
@@ -5124,22 +5800,28 @@
                     }
                     renderSidebarStaff(staffList, fallbackPastor, fallbackPhoto);
 
-                    renderSidebarDashboard(mergeDashboardWithSupabase(localDashboard, data, slug));
+                    return ensureSiteProfilesLoaded().then(function () {
+                        var mergedDashboard = mergeDashboardWithSupabase(localDashboard, data, slug);
+                        mergedDashboard.rainfall = data.rainfallRows && data.rainfallRows.length
+                            ? data.rainfallRows
+                            : getRainfallRowsForSite(slug);
+                        renderSidebarDashboard(mergedDashboard);
 
-                    var videoUrl = (data.site && data.site.video_url) ||
-                        (data.site && data.site.site_link) || '';
-                    var coverUrl = data.site && data.site.cover_image_url;
-                    renderSidebarMedia(videoUrl, coverUrl);
+                        var videoUrl = (data.site && data.site.video_url) ||
+                            (data.site && data.site.site_link) || '';
+                        var coverUrl = data.site && data.site.cover_image_url;
+                        renderSidebarMedia(videoUrl, coverUrl);
 
-                    var hasStaff = (data.staffList && data.staffList.length) ||
-                        (data.sidebar && data.sidebar.staff_count > 0);
-                    var hasWeekly = data.stats && data.stats.sundays_recorded > 0;
-                    if (!hasStaff && !hasWeekly) {
-                        console.info(
-                            '[ICBC map] Supabase is connected for "' + slug + '" but staff and weekly stats tables are empty. ' +
-                            'Import staff.csv → staff_import → process_all_site_imports(), and weekly_stats.csv → weekly_stats_import → process_weekly_stats_import().'
-                        );
-                    }
+                        var hasStaff = (data.staffList && data.staffList.length) ||
+                            (data.sidebar && data.sidebar.staff_count > 0);
+                        var hasWeekly = data.stats && data.stats.sundays_recorded > 0;
+                        if (!hasStaff && !hasWeekly) {
+                            console.info(
+                                '[ICBC map] Supabase is connected for "' + slug + '" but staff and weekly stats tables are empty. ' +
+                                'Import staff.csv → staff_import → process_all_site_imports(), and weekly_stats.csv → weekly_stats_import → process_weekly_stats_import().'
+                            );
+                        }
+                    });
                 })
                 .catch(function (err) {
                     console.warn('[ICBC map] Supabase sidebar enrichment failed for "' + slug + '":', err);
@@ -5786,6 +6468,9 @@
                         if (total > 0 || staticCatchments > 0) {
                             refreshSiteNameLabelsBurst();
                             loadStaffSearchIndex();
+                            loadSiteProfilesSeed();
+                            loadSiteWeeklyMetricsSeed();
+                            loadRainfallSeed();
                             console.info(
                                 '[ICBC map] Added ' + total + ' site marker(s) from Supabase / seed CSV.'
                             );
@@ -5960,6 +6645,9 @@
 
         initMapSearchControl(mapSearchHost);
         loadStaffSearchIndex();
+        loadSiteProfilesSeed();
+        loadSiteWeeklyMetricsSeed();
+        loadRainfallSeed();
 
         var legendToggleBtn = document.getElementById('legendToggle');
         var layersControl = legendControl.getContainer();

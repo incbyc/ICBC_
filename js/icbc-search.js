@@ -1,5 +1,45 @@
 var mapSearchIndex = [];
 var icbcSiteRegistry = {};
+var ICBC_RAINFALL_BY_SITE = {};
+var ICBC_PASTOR_FAMILY_BY_SITE = {};
+var ICBC_SITE_PROFILES_BY_SLUG = {};
+var ICBC_AVG_HOME_VISITS_BY_SLUG = {};
+
+function initSiteProfilesFromSeed() {
+    if (typeof window !== 'undefined' && window.ICBC_SITE_PROFILES_SEED) {
+        ICBC_SITE_PROFILES_BY_SLUG = Object.assign({}, window.ICBC_SITE_PROFILES_SEED);
+    }
+}
+
+function resolveSeedDataUrl(relativePath) {
+    var value = String(relativePath || '').replace(/^\//, '');
+    if (typeof window === 'undefined' || !window.location) return value;
+    if (window.location.protocol !== 'http:' && window.location.protocol !== 'https:') {
+        return value;
+    }
+    var path = window.location.pathname || '/';
+    var base = '/';
+    if (/\/index\.html$/i.test(path)) {
+        base = path.replace(/\/index\.html$/i, '/');
+    } else if (path.charAt(path.length - 1) !== '/') {
+        var lastSegment = path.split('/').pop() || '';
+        if (/\.[a-z0-9]+$/i.test(lastSegment)) {
+            var lastSlash = path.lastIndexOf('/');
+            base = lastSlash >= 0 ? path.slice(0, lastSlash + 1) : '/';
+        } else {
+            base = path + '/';
+        }
+    } else {
+        base = path;
+    }
+    if (value.charAt(0) === '/') {
+        if (base === '/' || base === '') return value;
+        return base.replace(/\/$/, '') + value;
+    }
+    return base + value;
+}
+
+initSiteProfilesFromSeed();
 
 function searchEscapeHtml(str) {
     if (str == null || str === '') return '';
@@ -98,6 +138,18 @@ function registerIcbcSiteMarker(layer, props) {
     }
 }
 
+function registerPastorFamilyRow(row) {
+    var slug = (row.site_slug || '').trim().toLowerCase();
+    var role = (row.role || '').trim();
+    if (!slug || role !== 'Pastor') return;
+    ICBC_PASTOR_FAMILY_BY_SITE[slug] = {
+        spouse_name: (row.spouse_name || '').trim(),
+        children_count: row.children_count != null && row.children_count !== ''
+            ? row.children_count
+            : ''
+    };
+}
+
 function registerStaffRow(row) {
     var slug = (row.site_slug || '').trim().toLowerCase();
     var fullName = (row.full_name || '').trim();
@@ -186,10 +238,120 @@ function loadStaffSearchIndex() {
                     full_name: cells[hi.full_name],
                     role: cells[hi.role]
                 });
+                registerPastorFamilyRow({
+                    site_slug: cells[hi.site_slug],
+                    role: cells[hi.role],
+                    spouse_name: hi.spouse_name != null ? cells[hi.spouse_name] : '',
+                    children_count: hi.children_count != null ? cells[hi.children_count] : ''
+                });
             }
         })
         .catch(function () {
             /* staff search optional when opened via file:// */
+        });
+}
+
+function loadSiteProfilesSeed() {
+    return fetch(resolveSeedDataUrl('supabase/seed/icbc_site_profiles.csv'))
+        .then(function (res) {
+            if (!res.ok) throw new Error('icbc_site_profiles.csv not found');
+            return res.text();
+        })
+        .then(function (text) {
+            var rows = parseCsvRows(text);
+            if (rows.length < 2) return;
+            var headers = rows[0];
+            var hi = {};
+            var c;
+            for (c = 0; c < headers.length; c++) {
+                hi[headers[c].trim()] = c;
+            }
+            ICBC_SITE_PROFILES_BY_SLUG = {};
+            var r;
+            for (r = 1; r < rows.length; r++) {
+                var cells = rows[r];
+                var slug = String(cells[hi.site_slug] || '').trim().toLowerCase();
+                if (!slug) continue;
+                ICBC_SITE_PROFILES_BY_SLUG[slug] = {
+                    compassionate_care_members: Number(cells[hi.compassionate_care_members]) || 0
+                };
+            }
+        })
+        .catch(function () {
+            initSiteProfilesFromSeed();
+        });
+}
+
+function loadSiteWeeklyMetricsSeed() {
+    return fetch('supabase/seed/site_weekly_metrics.csv')
+        .then(function (res) {
+            if (!res.ok) throw new Error('site_weekly_metrics.csv not found');
+            return res.text();
+        })
+        .then(function (text) {
+            var rows = parseCsvRows(text);
+            if (rows.length < 2) return;
+            var headers = rows[0];
+            var hi = {};
+            var c;
+            for (c = 0; c < headers.length; c++) {
+                hi[headers[c].trim()] = c;
+            }
+            ICBC_AVG_HOME_VISITS_BY_SLUG = {};
+            var r;
+            for (r = 1; r < rows.length; r++) {
+                var cells = rows[r];
+                var slug = String(cells[hi.site_slug] || '').trim().toLowerCase();
+                if (!slug) continue;
+                var avg = Number(cells[hi.avg_home_visits_per_week]);
+                if (!isNaN(avg) && avg >= 5) {
+                    ICBC_AVG_HOME_VISITS_BY_SLUG[slug] = avg;
+                }
+            }
+        })
+        .catch(function () {
+            /* weekly metrics optional when opened via file:// */
+        });
+}
+
+function loadRainfallSeed() {
+    return fetch('supabase/seed/rainfall_monthly.csv')
+        .then(function (res) {
+            if (!res.ok) throw new Error('rainfall_monthly.csv not found');
+            return res.text();
+        })
+        .then(function (text) {
+            var rows = parseCsvRows(text);
+            if (rows.length < 2) return;
+            var headers = rows[0];
+            var hi = {};
+            var c;
+            for (c = 0; c < headers.length; c++) {
+                hi[headers[c].trim()] = c;
+            }
+            ICBC_RAINFALL_BY_SITE = {};
+            var r;
+            for (r = 1; r < rows.length; r++) {
+                var cells = rows[r];
+                var slug = String(cells[hi.site_slug] || '').trim().toLowerCase();
+                if (!slug) continue;
+                if (!ICBC_RAINFALL_BY_SITE[slug]) ICBC_RAINFALL_BY_SITE[slug] = [];
+                ICBC_RAINFALL_BY_SITE[slug].push({
+                    month: Number(cells[hi.month]) || 0,
+                    month_label: cells[hi.month_label] || '',
+                    rainfall_mm: Number(cells[hi.rainfall_mm]) || 0,
+                    temperature_c: cells[hi.temperature_c] !== '' && cells[hi.temperature_c] != null
+                        ? Number(cells[hi.temperature_c]) : null
+                });
+            }
+            Object.keys(ICBC_RAINFALL_BY_SITE).forEach(function (slug) {
+                ICBC_RAINFALL_BY_SITE[slug].sort(function (a, b) {
+                    return a.month - b.month;
+                });
+            });
+        })
+        .catch(function () {
+            /* rainfall chart optional when opened via file:// */
         });
 }
 

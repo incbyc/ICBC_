@@ -89,6 +89,18 @@ FIELD_SPECS: dict[str, FieldSpec] = {
         "Photo URL",
         help="Uploaded to Supabase Storage when sync is enabled (live map). A local copy is kept for optional Git backup.",
     ),
+    "spouse_name": FieldSpec(
+        "Spouse / wife name",
+        help="Pastor family — shown on the map sidebar (name only).",
+    ),
+    "children_count": FieldSpec(
+        "Number of children",
+        help="Pastor family — count only; children's names are not stored.",
+    ),
+    "month": FieldSpec("Month (1–12)", required=True),
+    "month_label": FieldSpec("Month label", help="Short label such as Jan, Feb, …"),
+    "rainfall_mm": FieldSpec("Rainfall (mm)", required=True),
+    "temperature_c": FieldSpec("Average temperature (°C)"),
     "sort_order": FieldSpec("Sort order"),
     "children_count": FieldSpec("Children count", required=True),
     "snapshot_date": FieldSpec("Snapshot date", widget="date", help="Use YYYY-MM-DD.", required=True),
@@ -151,12 +163,32 @@ TABLE_CONFIGS = {
             "role",
             "year_joined",
             "photo_url",
+            "spouse_name",
+            "children_count",
             "sort_order",
         ),
         unique_keys=("site_slug", "full_name", "role"),
         sort_keys=("site_slug", "role", "sort_order", "full_name"),
-        intro="Pastors, teachers, compassionate care team members, and other staff.",
+        intro="Pastors, teachers, compassionate care team members, and other staff. Pastor rows include spouse name and children count for the map sidebar.",
         template_name="staff_template.csv",
+    ),
+    "rainfall_monthly": TableConfig(
+        key="rainfall_monthly",
+        title="Rainfall / Temperature",
+        file_name="rainfall_monthly.csv",
+        fallback_columns=(
+            "site_slug",
+            "month",
+            "month_label",
+            "rainfall_mm",
+            "temperature_c",
+        ),
+        unique_keys=("site_slug", "month"),
+        sort_keys=("site_slug", "month"),
+        intro=(
+            "Monthly average rainfall (mm) and temperature (°C) per ICBC site for the sidebar climate chart. "
+            "Regenerate with `python scripts/generate_rainfall_seed.py`."
+        ),
     ),
     "preschool_enrollment": TableConfig(
         key="preschool_enrollment",
@@ -348,6 +380,13 @@ def sanitise_row(row: dict[str, str], columns: list[str]) -> dict[str, str]:
         clean_row["slug"] = slugify(clean_row["name"])
     if "sort_order" in clean_row and not clean_row["sort_order"]:
         clean_row["sort_order"] = "0"
+    if clean_row.get("role") == "Pastor" and "spouse_name" in clean_row:
+        from staff_spouse_utils import align_spouse_surname, is_invalid_spouse
+
+        spouse = clean_row.get("spouse_name", "")
+        if is_invalid_spouse(spouse):
+            spouse = ""
+        clean_row["spouse_name"] = align_spouse_surname(clean_row.get("full_name", ""), spouse)
     return clean_row
 
 
@@ -1720,6 +1759,7 @@ def main() -> None:
     tab_order = [
         "icbc_sites",
         "staff",
+        "rainfall_monthly",
         "preschool_enrollment",
         "ploughing_records",
         "maize_buyback_records",
