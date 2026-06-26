@@ -23,6 +23,15 @@ CHURCH_ALIASES = {
     "nsubani": "nsubane",
 }
 
+METRIC_FIELDS = (
+    "avg_home_visits_per_week",
+    "avg_men",
+    "avg_women",
+    "avg_youth",
+    "avg_children",
+    "weeks_recorded",
+)
+
 
 def slugify(text: str) -> str:
     value = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
@@ -65,47 +74,82 @@ def church_to_slug(church: str, name_map: dict[str, str]) -> str:
     return slug
 
 
-def compute_avg_home_visits(
+def _float(value: object) -> float:
+    try:
+        return float(value or 0)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def compute_site_weekly_metrics(
     weekly_stats_csv: Path,
     sites_csv: Path,
-    min_avg: float = 5.0,
-) -> dict[str, float]:
+    min_avg_home_visits: float = 5.0,
+) -> dict[str, dict[str, float | int]]:
     name_map = load_site_name_map(sites_csv)
-    totals: dict[str, list[float]] = defaultdict(list)
+    home_visits: dict[str, list[float]] = defaultdict(list)
+    men: dict[str, list[float]] = defaultdict(list)
+    women: dict[str, list[float]] = defaultdict(list)
+    youth: dict[str, list[float]] = defaultdict(list)
+    children: dict[str, list[float]] = defaultdict(list)
 
     with weekly_stats_csv.open(newline="", encoding="utf-8") as handle:
         for row in csv.DictReader(handle):
             slug = church_to_slug(row.get("church", ""), name_map)
             if not slug:
                 continue
-            try:
-                visits = float(row.get("home_visits") or 0)
-            except ValueError:
+            attendance = _float(row.get("total_attendance"))
+            if attendance <= 0:
                 continue
-            totals[slug].append(visits)
+            home_visits[slug].append(_float(row.get("home_visits")))
+            men[slug].append(_float(row.get("men")))
+            women[slug].append(_float(row.get("women")))
+            youth[slug].append(_float(row.get("youth")))
+            children[slug].append(_float(row.get("children")))
 
-    averages: dict[str, float] = {}
-    for slug, values in totals.items():
-        if not values:
+    metrics: dict[str, dict[str, float | int]] = {}
+    all_slugs = set(home_visits) | set(men) | set(women) | set(youth) | set(children)
+    for slug in all_slugs:
+        weeks = len(men.get(slug) or women.get(slug) or youth.get(slug) or children.get(slug) or [])
+        if not weeks:
             continue
-        avg = sum(values) / len(values)
-        if avg >= min_avg:
-            averages[slug] = round(avg, 1)
-    return averages
+        entry: dict[str, float | int] = {
+            "weeks_recorded": weeks,
+            "avg_men": round(sum(men[slug]) / weeks, 1),
+            "avg_women": round(sum(women[slug]) / weeks, 1),
+            "avg_youth": round(sum(youth[slug]) / weeks, 1),
+            "avg_children": round(sum(children[slug]) / weeks, 1),
+            "avg_home_visits_per_week": 0.0,
+        }
+        visits = home_visits.get(slug) or []
+        if visits:
+            entry["avg_home_visits_per_week"] = round(sum(visits) / len(visits), 1)
+        metrics[slug] = entry
+
+    return {
+        slug: values
+        for slug, values in metrics.items()
+        if values["weeks_recorded"] > 0
+        and (
+            values["avg_home_visits_per_week"] >= min_avg_home_visits
+            or values["avg_men"] > 0
+            or values["avg_women"] > 0
+            or values["avg_youth"] > 0
+            or values["avg_children"] > 0
+        )
+    }
 
 
-def write_metrics_csv(averages: dict[str, float], out_path: Path) -> None:
+def write_metrics_csv(metrics: dict[str, dict[str, float | int]], out_path: Path) -> None:
     out_path.parent.mkdir(parents=True, exist_ok=True)
+    fieldnames = ["site_slug", *METRIC_FIELDS]
     with out_path.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=["site_slug", "avg_home_visits_per_week"])
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
         writer.writeheader()
-        for slug in sorted(averages):
-            writer.writerow(
-                {
-                    "site_slug": slug,
-                    "avg_home_visits_per_week": averages[slug],
-                }
-            )
+        for slug in sorted(metrics):
+            row = {"site_slug": slug}
+            row.update(metrics[slug])
+            writer.writerow(row)
 
 
 def main() -> None:
@@ -125,12 +169,16 @@ def main() -> None:
         type=Path,
         default=SEED_DIR / "site_weekly_metrics.csv",
     )
-    parser.add_argument("--min-avg", type=float, default=5.0)
+    parser.add_argument("--min-avg-home-visits", type=float, default=5.0)
     args = parser.parse_args()
 
-    averages = compute_avg_home_visits(args.weekly_stats, args.sites_csv, args.min_avg)
-    write_metrics_csv(averages, args.out)
-    print(f"Wrote {len(averages)} site(s) with avg home visits >= {args.min_avg} to {args.out}")
+    metrics = compute_site_weekly_metrics(
+        args.weekly_stats,
+        args.sites_csv,
+        args.min_avg_home_visits,
+    )
+    write_metrics_csv(metrics, args.out)
+    print(f"Wrote {len(metrics)} site weekly metric row(s) to {args.out}")
 
 
 if __name__ == "__main__":

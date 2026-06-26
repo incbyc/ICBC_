@@ -5,6 +5,7 @@
 --
 -- Sidebar display rules (value must be GREATER THAN the threshold):
 --   Avg attendance     — always shown when weekly data exists
+--   Avg men/women/youth/children — per Sunday (weeks with attendance > 0)
 --   Total salvations   — only if total > 10
 --   Total baptisms     — only if total > 10
 --   Total home visits  — only if total > 50
@@ -33,10 +34,40 @@ select
             jsonb_build_object(
                 'key', 'avg_attendance',
                 'title', 'Avg attendance',
-                'value', round(coalesce(avg(w.total_attendance), 0)::numeric, 1),
+                'value', round(coalesce(avg(w.total_attendance) filter (where w.total_attendance > 0), 0)::numeric, 1),
                 'format', 'decimal'
             )
         )
+        || case
+            when count(w.id) filter (where w.total_attendance > 0) > 0 then
+                jsonb_build_array(
+                    jsonb_build_object(
+                        'key', 'avg_men',
+                        'title', 'Avg men',
+                        'value', round(coalesce(avg(w.men) filter (where w.total_attendance > 0), 0)::numeric, 1),
+                        'format', 'decimal'
+                    ),
+                    jsonb_build_object(
+                        'key', 'avg_women',
+                        'title', 'Avg women',
+                        'value', round(coalesce(avg(w.women) filter (where w.total_attendance > 0), 0)::numeric, 1),
+                        'format', 'decimal'
+                    ),
+                    jsonb_build_object(
+                        'key', 'avg_youth',
+                        'title', 'Avg youth',
+                        'value', round(coalesce(avg(w.youth) filter (where w.total_attendance > 0), 0)::numeric, 1),
+                        'format', 'decimal'
+                    ),
+                    jsonb_build_object(
+                        'key', 'avg_children',
+                        'title', 'Avg children',
+                        'value', round(coalesce(avg(w.children) filter (where w.total_attendance > 0), 0)::numeric, 1),
+                        'format', 'decimal'
+                    )
+                )
+            else '[]'::jsonb
+        end
         || case
             when coalesce(sum(w.salvations), 0) > 10 then
                 jsonb_build_array(

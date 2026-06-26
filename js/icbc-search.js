@@ -4,6 +4,7 @@ var ICBC_RAINFALL_BY_SITE = {};
 var ICBC_PASTOR_FAMILY_BY_SITE = {};
 var ICBC_SITE_PROFILES_BY_SLUG = {};
 var ICBC_AVG_HOME_VISITS_BY_SLUG = {};
+var ICBC_WEEKLY_METRICS_BY_SLUG = {};
 
 function initSiteProfilesFromSeed() {
     if (typeof window !== 'undefined' && window.ICBC_SITE_PROFILES_SEED) {
@@ -283,7 +284,7 @@ function loadSiteProfilesSeed() {
 }
 
 function loadSiteWeeklyMetricsSeed() {
-    return fetch('supabase/seed/site_weekly_metrics.csv')
+    return fetch(resolveSeedDataUrl('supabase/seed/site_weekly_metrics.csv'))
         .then(function (res) {
             if (!res.ok) throw new Error('site_weekly_metrics.csv not found');
             return res.text();
@@ -298,14 +299,23 @@ function loadSiteWeeklyMetricsSeed() {
                 hi[headers[c].trim()] = c;
             }
             ICBC_AVG_HOME_VISITS_BY_SLUG = {};
+            ICBC_WEEKLY_METRICS_BY_SLUG = {};
             var r;
             for (r = 1; r < rows.length; r++) {
                 var cells = rows[r];
                 var slug = String(cells[hi.site_slug] || '').trim().toLowerCase();
                 if (!slug) continue;
-                var avg = Number(cells[hi.avg_home_visits_per_week]);
-                if (!isNaN(avg) && avg >= 5) {
-                    ICBC_AVG_HOME_VISITS_BY_SLUG[slug] = avg;
+                var metrics = {
+                    avg_men: Number(cells[hi.avg_men]),
+                    avg_women: Number(cells[hi.avg_women]),
+                    avg_youth: Number(cells[hi.avg_youth]),
+                    avg_children: Number(cells[hi.avg_children]),
+                    weeks_recorded: Number(cells[hi.weeks_recorded]) || 0
+                };
+                ICBC_WEEKLY_METRICS_BY_SLUG[slug] = metrics;
+                var avgHv = Number(cells[hi.avg_home_visits_per_week]);
+                if (!isNaN(avgHv) && avgHv >= 5) {
+                    ICBC_AVG_HOME_VISITS_BY_SLUG[slug] = avgHv;
                 }
             }
         })

@@ -2677,6 +2677,98 @@
             font-size: 22px;
         }
 
+        .sidebar-block-stats .sidebar-stats-body {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .sidebar-attendance-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .sidebar-attendance-panel-head {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: #80868b;
+        }
+
+        .sidebar-attendance-hero {
+            text-align: center;
+            padding: 10px 10px;
+            border-radius: 8px;
+            background: #fafafa;
+            border: 1px solid #e8eaed;
+        }
+
+        .sidebar-attendance-hero-val {
+            font-size: 32px;
+            font-weight: 700;
+            line-height: 1.1;
+            color: #202124;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .sidebar-attendance-hero-lbl {
+            margin-top: 4px;
+            font-size: 10px;
+            color: #80868b;
+            line-height: 1.25;
+        }
+
+        .sidebar-attendance-breakdown {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .sidebar-attendance-segment {
+            padding: 10px 10px;
+            border-radius: 8px;
+            text-align: center;
+            background: #fafafa;
+            border: 1px solid #e8eaed;
+        }
+
+        .sidebar-attendance-segment-val {
+            font-size: 18px;
+            font-weight: 700;
+            line-height: 1.15;
+            color: #202124;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .sidebar-attendance-segment-lbl {
+            margin-top: 4px;
+            font-size: 10px;
+            color: #80868b;
+            line-height: 1.25;
+        }
+
+        .sidebar-stats-other-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: #80868b;
+        }
+
+        .site-sidebar.expanded .sidebar-attendance-hero-val {
+            font-size: 38px;
+        }
+
+        .site-sidebar.expanded .sidebar-attendance-breakdown {
+            gap: 10px;
+        }
+
+        .site-sidebar.expanded .sidebar-attendance-segment-val {
+            font-size: 22px;
+        }
+
         .site-sidebar.expanded .sidebar-title {
             font-size: 24px;
         }
@@ -3852,7 +3944,10 @@
                 localDashboard.rainfall = getRainfallRowsForSite(
                     props._slug || slugifyForApi(props['Site Name'] || '')
                 );
-                ensureSiteProfilesLoaded().then(function () {
+                Promise.all([
+                    ensureSiteProfilesLoaded(),
+                    ensureWeeklyMetricsLoaded()
+                ]).then(function () {
                     localDashboard = injectSiteProgrammeMetrics(
                         localDashboard,
                         props._slug || slugifyForApi(props['Site Name'] || '')
@@ -5276,12 +5371,83 @@
 
         var SIDEBAR_STAT_KEYS = {
             avg_attendance: true,
+            avg_men: true,
+            avg_women: true,
+            avg_youth: true,
+            avg_children: true,
             salvations: true,
             baptisms: true,
             home_visits: true,
             compassionate_care: true,
             avg_home_visits_weekly: true
         };
+
+        var STATISTICS_METRIC_ORDER = {
+            avg_attendance: 1,
+            avg_men: 2,
+            avg_women: 3,
+            avg_youth: 4,
+            avg_children: 5,
+            salvations: 6,
+            baptisms: 7,
+            home_visits: 8,
+            avg_home_visits_weekly: 9,
+            compassionate_care: 10
+        };
+
+        var ATTENDANCE_STAT_KEYS = {
+            avg_attendance: true,
+            avg_men: true,
+            avg_women: true,
+            avg_youth: true,
+            avg_children: true
+        };
+
+        function ensureWeeklyMetricsLoaded() {
+            if (typeof ICBC_WEEKLY_METRICS_BY_SLUG !== 'undefined' &&
+                Object.keys(ICBC_WEEKLY_METRICS_BY_SLUG).length) {
+                return Promise.resolve();
+            }
+            if (typeof loadSiteWeeklyMetricsSeed === 'function') {
+                return loadSiteWeeklyMetricsSeed().catch(function () { });
+            }
+            return Promise.resolve();
+        }
+
+        function hasDashboardMetricKey(metrics, key) {
+            return (metrics || []).some(function (m) {
+                return m && m.key === key;
+            });
+        }
+
+        function injectWeeklyDemographicsMetrics(dashboard, siteSlug) {
+            var slug = String(siteSlug || '').trim().toLowerCase();
+            if (!slug) return dashboard;
+
+            var weekly = typeof ICBC_WEEKLY_METRICS_BY_SLUG !== 'undefined'
+                ? ICBC_WEEKLY_METRICS_BY_SLUG[slug]
+                : null;
+            if (!weekly || !(Number(weekly.weeks_recorded) > 0)) return dashboard;
+
+            [
+                { key: 'avg_men', title: 'Avg men', field: 'avg_men' },
+                { key: 'avg_women', title: 'Avg women', field: 'avg_women' },
+                { key: 'avg_youth', title: 'Avg youth', field: 'avg_youth' },
+                { key: 'avg_children', title: 'Avg children', field: 'avg_children' }
+            ].forEach(function (def) {
+                if (hasDashboardMetricKey(dashboard.metrics, def.key)) return;
+                var val = Number(weekly[def.field]);
+                if (isNaN(val)) return;
+                dashboard.metrics.push({
+                    key: def.key,
+                    title: def.title,
+                    value: val,
+                    format: 'decimal'
+                });
+            });
+
+            return dashboard;
+        }
 
         function getCompassionateCareMemberCount(siteSlug) {
             var slug = String(siteSlug || '').trim().toLowerCase();
@@ -5344,7 +5510,7 @@
                 });
             }
 
-            return dashboard;
+            return injectWeeklyDemographicsMetrics(dashboard, siteSlug);
         }
 
         function isStatisticsMetric(metric) {
@@ -5355,11 +5521,20 @@
                 title.indexOf('salvation') >= 0 ||
                 title.indexOf('baptism') >= 0 ||
                 title.indexOf('home visit') >= 0 ||
-                title.indexOf('compassionate care') >= 0;
+                title.indexOf('compassionate care') >= 0 ||
+                title.indexOf('avg men') >= 0 ||
+                title.indexOf('avg women') >= 0 ||
+                title.indexOf('avg youth') >= 0 ||
+                title.indexOf('avg children') >= 0;
         }
 
         function pickStatisticsMetrics(metrics) {
-            return (metrics || []).filter(isStatisticsMetric);
+            return (metrics || []).filter(isStatisticsMetric).sort(function (a, b) {
+                var orderA = STATISTICS_METRIC_ORDER[a.key] || 99;
+                var orderB = STATISTICS_METRIC_ORDER[b.key] || 99;
+                if (orderA !== orderB) return orderA - orderB;
+                return String(a.title || '').localeCompare(String(b.title || ''));
+            });
         }
 
         function sidebarImpactMetrics(stats) {
@@ -5371,6 +5546,112 @@
                     escapeHtml(String(stat.value)) + '</div></div>';
             });
             return html + '</div>';
+        }
+
+        function formatAttendanceMetricValue(val) {
+            if (val == null || val === '') return '—';
+            var n = Number(val);
+            if (isNaN(n)) return String(val);
+            return Math.round(n).toLocaleString(undefined, { maximumFractionDigits: 0 });
+        }
+
+        function formatStatisticsCard(metric) {
+            var value;
+            if (ATTENDANCE_STAT_KEYS[metric.key]) {
+                value = formatAttendanceMetricValue(metric.value);
+            } else if (metric.format === 'decimal') {
+                value = formatMetricValue(metric.value, 1);
+            } else {
+                value = formatMetricValue(metric.value);
+            }
+            return {
+                key: metric.key,
+                title: metric.title,
+                value: value
+            };
+        }
+
+        function shortAttendanceLabel(key, fallbackTitle) {
+            var labels = {
+                avg_men: 'Men',
+                avg_women: 'Women',
+                avg_youth: 'Youth',
+                avg_children: 'Children'
+            };
+            return labels[key] || fallbackTitle;
+        }
+
+        function renderAttendanceStatisticsPanel(attendanceCards) {
+            if (!attendanceCards.length) return '';
+
+            var hero = null;
+            var breakdown = [];
+            attendanceCards.forEach(function (stat) {
+                if (stat.key === 'avg_attendance') {
+                    hero = stat;
+                } else {
+                    breakdown.push(stat);
+                }
+            });
+            if (!hero && !breakdown.length) return '';
+
+            var html = '<div class="sidebar-attendance-panel">';
+            html += '<div class="sidebar-attendance-panel-head">Sunday attendance averages</div>';
+
+            if (hero) {
+                html += '<div class="sidebar-attendance-hero">' +
+                    '<div class="sidebar-attendance-hero-val">' + escapeHtml(String(hero.value)) + '</div>' +
+                    '<div class="sidebar-attendance-hero-lbl">' + escapeHtml(hero.title) + '</div>' +
+                    '</div>';
+            }
+
+            if (breakdown.length) {
+                html += '<div class="sidebar-attendance-breakdown">';
+                breakdown.forEach(function (stat) {
+                    html += '<div class="sidebar-attendance-segment">' +
+                        '<div class="sidebar-attendance-segment-val">' + escapeHtml(String(stat.value)) + '</div>' +
+                        '<div class="sidebar-attendance-segment-lbl">' +
+                        escapeHtml(shortAttendanceLabel(stat.key, stat.title)) + '</div></div>';
+                });
+                html += '</div>';
+            }
+
+            html += '</div>';
+            return html;
+        }
+
+        function renderSidebarStatisticsSection(metrics) {
+            var statMetrics = pickStatisticsMetrics(metrics);
+            if (!statMetrics.length) return '';
+
+            var attendanceCards = [];
+            var otherCards = [];
+            statMetrics.forEach(function (metric) {
+                var card = formatStatisticsCard(metric);
+                if (ATTENDANCE_STAT_KEYS[metric.key]) {
+                    attendanceCards.push(card);
+                } else {
+                    otherCards.push(card);
+                }
+            });
+
+            var html = '<section class="sidebar-block sidebar-block-stats">' +
+                '<h3 class="sidebar-section-head stats">' +
+                '<i class="fas fa-chart-line" aria-hidden="true"></i><span>Statistics</span></h3>' +
+                '<div class="sidebar-stats-body">';
+
+            if (attendanceCards.length) {
+                html += renderAttendanceStatisticsPanel(attendanceCards);
+            }
+            if (otherCards.length) {
+                if (attendanceCards.length) {
+                    html += '<div class="sidebar-stats-other-label">Other impact</div>';
+                }
+                html += sidebarImpactMetrics(otherCards);
+            }
+
+            html += '</div></section>';
+            return html;
         }
 
         function renderPloughingTable(rows) {
@@ -5469,20 +5750,7 @@
             var siteSlug = (sidebarBody && sidebarBody.dataset.siteSlug) || '';
             html += renderSidebarRainfallChart(siteSlug, dashboard.rainfall || null);
             var metrics = dashboard.metrics || [];
-            var statMetrics = pickStatisticsMetrics(metrics);
-            if (statMetrics.length) {
-                var statCards = statMetrics.map(function (m) {
-                    return {
-                        title: m.title,
-                        value: m.format === 'decimal'
-                            ? formatMetricValue(m.value, 1)
-                            : formatMetricValue(m.value)
-                    };
-                });
-                html += '<section class="sidebar-block"><h3 class="sidebar-section-head stats">' +
-                    '<i class="fas fa-chart-line" aria-hidden="true"></i><span>Statistics</span></h3>' +
-                    sidebarImpactMetrics(statCards) + '</section>';
-            }
+            html += renderSidebarStatisticsSection(metrics);
 
             var pre = dashboard.preschool;
             if (pre && (pre.total_children_impacted > 0 || pre.current_enrollment > 0 || pre.children_count > 0)) {
@@ -5800,7 +6068,10 @@
                     }
                     renderSidebarStaff(staffList, fallbackPastor, fallbackPhoto);
 
-                    return ensureSiteProfilesLoaded().then(function () {
+                    return Promise.all([
+                        ensureSiteProfilesLoaded(),
+                        ensureWeeklyMetricsLoaded()
+                    ]).then(function () {
                         var mergedDashboard = mergeDashboardWithSupabase(localDashboard, data, slug);
                         mergedDashboard.rainfall = data.rainfallRows && data.rainfallRows.length
                             ? data.rainfallRows
