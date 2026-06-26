@@ -12,6 +12,27 @@ function initSiteProfilesFromSeed() {
     }
 }
 
+function initWeeklyMetricsFromSeed() {
+    if (typeof window === 'undefined' || !window.ICBC_WEEKLY_METRICS_SEED) return;
+
+    ICBC_WEEKLY_METRICS_BY_SLUG = {};
+    ICBC_AVG_HOME_VISITS_BY_SLUG = {};
+    Object.keys(window.ICBC_WEEKLY_METRICS_SEED).forEach(function (slug) {
+        var row = window.ICBC_WEEKLY_METRICS_SEED[slug] || {};
+        ICBC_WEEKLY_METRICS_BY_SLUG[slug] = {
+            avg_men: Number(row.avg_men),
+            avg_women: Number(row.avg_women),
+            avg_youth: Number(row.avg_youth),
+            avg_children: Number(row.avg_children),
+            weeks_recorded: Number(row.weeks_recorded) || 0
+        };
+        var avgHv = Number(row.avg_home_visits_per_week);
+        if (!isNaN(avgHv) && avgHv >= 5) {
+            ICBC_AVG_HOME_VISITS_BY_SLUG[slug] = avgHv;
+        }
+    });
+}
+
 function resolveSeedDataUrl(relativePath) {
     var value = String(relativePath || '').replace(/^\//, '');
     if (typeof window === 'undefined' || !window.location) return value;
@@ -284,6 +305,7 @@ function loadSiteProfilesSeed() {
 }
 
 function loadSiteWeeklyMetricsSeed() {
+    initWeeklyMetricsFromSeed();
     return fetch(resolveSeedDataUrl('supabase/seed/site_weekly_metrics.csv'))
         .then(function (res) {
             if (!res.ok) throw new Error('site_weekly_metrics.csv not found');
@@ -320,7 +342,7 @@ function loadSiteWeeklyMetricsSeed() {
             }
         })
         .catch(function () {
-            /* weekly metrics optional when opened via file:// */
+            initWeeklyMetricsFromSeed();
         });
 }
 

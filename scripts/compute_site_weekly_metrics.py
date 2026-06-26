@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import json
 import re
 import unicodedata
 from collections import defaultdict
@@ -152,6 +153,18 @@ def write_metrics_csv(metrics: dict[str, dict[str, float | int]], out_path: Path
             writer.writerow(row)
 
 
+def write_metrics_js(metrics: dict[str, dict[str, float | int]], out_path: Path) -> None:
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {slug: metrics[slug] for slug in sorted(metrics)}
+    lines = [
+        "// Auto-generated from supabase/seed/site_weekly_metrics.csv",
+        "// — run scripts/compute_site_weekly_metrics.py to refresh.",
+        "window.ICBC_WEEKLY_METRICS_SEED = " + json.dumps(payload, indent=4) + ";",
+        "",
+    ]
+    out_path.write_text("\n".join(lines), encoding="utf-8")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -169,6 +182,11 @@ def main() -> None:
         type=Path,
         default=SEED_DIR / "site_weekly_metrics.csv",
     )
+    parser.add_argument(
+        "--out-js",
+        type=Path,
+        default=ROOT / "js" / "icbc-weekly-metrics-data.js",
+    )
     parser.add_argument("--min-avg-home-visits", type=float, default=5.0)
     args = parser.parse_args()
 
@@ -178,7 +196,9 @@ def main() -> None:
         args.min_avg_home_visits,
     )
     write_metrics_csv(metrics, args.out)
+    write_metrics_js(metrics, args.out_js)
     print(f"Wrote {len(metrics)} site weekly metric row(s) to {args.out}")
+    print(f"Wrote embedded weekly metrics seed to {args.out_js}")
 
 
 if __name__ == "__main__":

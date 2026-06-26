@@ -3260,6 +3260,7 @@
         <script src="js/labelgun.min.js"></script>
         <script src="js/labels.js"></script>
         <script src="js/icbc-site-profiles-data.js"></script>
+        <script src="js/icbc-weekly-metrics-data.js"></script>
         <script src="js/icbc-search.js"></script>
         <script src="js/icbc-catchment.js"></script>
         <script src="js/leaflet-measure.js"></script>
@@ -5404,12 +5405,19 @@
         };
 
         function ensureWeeklyMetricsLoaded() {
+            if (typeof initWeeklyMetricsFromSeed === 'function') {
+                initWeeklyMetricsFromSeed();
+            }
             if (typeof ICBC_WEEKLY_METRICS_BY_SLUG !== 'undefined' &&
                 Object.keys(ICBC_WEEKLY_METRICS_BY_SLUG).length) {
                 return Promise.resolve();
             }
             if (typeof loadSiteWeeklyMetricsSeed === 'function') {
-                return loadSiteWeeklyMetricsSeed().catch(function () { });
+                return loadSiteWeeklyMetricsSeed().catch(function () {
+                    if (typeof initWeeklyMetricsFromSeed === 'function') {
+                        initWeeklyMetricsFromSeed();
+                    }
+                });
             }
             return Promise.resolve();
         }
