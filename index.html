@@ -878,6 +878,9 @@
         .cms-dash-section.theme-plough .cms-dash-section-icon { background: linear-gradient(135deg, #e65100, #fb8c00); }
         .cms-dash-section.theme-plough .cms-dash-stat-icon { background: #fff3e0; color: #e65100; }
 
+        .cms-dash-section.theme-water .cms-dash-section-icon { background: linear-gradient(135deg, #0277bd, #4fc3f7); }
+        .cms-dash-section.theme-water .cms-dash-stat-icon { background: #e1f5fe; color: #0277bd; }
+
         .cms-dash-section.theme-maize .cms-dash-section-icon { background: linear-gradient(135deg, #f9a825, #fbc02d); }
         .cms-dash-section.theme-maize .cms-dash-stat-icon { background: #fffde7; color: #f57f17; }
 
@@ -3261,6 +3264,7 @@
         <script src="js/labels.js"></script>
         <script src="js/icbc-site-profiles-data.js"></script>
         <script src="js/icbc-weekly-metrics-data.js"></script>
+        <script src="js/icbc-network-impact-data.js"></script>
         <script src="js/icbc-search.js"></script>
         <script src="js/icbc-catchment.js"></script>
         <script src="js/leaflet-measure.js"></script>
@@ -5023,6 +5027,28 @@
                 '<div class="cms-dash-grid">' + statsHtml + '</div></section>';
         }
 
+        function applyNetworkImpactSeed(stats) {
+            stats = stats || {};
+            if (typeof window === 'undefined' || !window.ICBC_NETWORK_IMPACT_SEED) {
+                return stats;
+            }
+            var seed = window.ICBC_NETWORK_IMPACT_SEED;
+            if (seed.total_wells_built != null) {
+                stats.total_wells_built = Number(seed.total_wells_built) || 0;
+            }
+            if (seed.total_unique_farmers_supported != null) {
+                stats.total_farmers_supported = Number(seed.total_unique_farmers_supported) || 0;
+            }
+            return stats;
+        }
+
+        function countWellsBuiltFromWaterSource(waterSource) {
+            if (!waterSource) return 0;
+            return String(waterSource).split(',').filter(function (part) {
+                return part.toLowerCase().indexOf('well') >= 0;
+            }).length;
+        }
+
         function renderCmsNetworkImpactBody(stats, preschool, periods, weeklyTrendRows) {
             var s = stats || {};
             var p = periods || {};
@@ -5110,14 +5136,23 @@
                 cmsDashStat('fa-map', 'Hectares ploughed', formatMetricValue(s.total_hectares_ploughed, 1))
             );
 
+            if (Number(s.total_wells_built) > 0) {
+                html += cmsDashSection(
+                    'Water & wells',
+                    'fa-tint',
+                    'theme-water',
+                    'Wells drilled or installed at ICBC sites',
+                    cmsDashStat('fa-tint', 'Wells built', formatMetricValue(s.total_wells_built))
+                );
+            }
+
             html += cmsDashSection(
                 'Maize buy-back',
                 'fa-box',
                 'theme-maize',
                 maizePeriod ? 'Buy-back seasons ' + maizePeriod : 'Maize sustainability programme',
-                cmsDashStat('fa-weight-hanging', 'Maize purchased (kg)', formatMetricValue(s.total_maize_kg, 0)) +
                 cmsDashStat('fa-balance-scale', 'Maize purchased (tonnes)', formatMetricValue(maizeTonnes, maizeTonnes < 10 ? 2 : 1)) +
-                cmsDashStat('fa-hands-helping', 'Farmers supported', formatMetricValue(s.total_farmers_supported))
+                cmsDashStat('fa-hands-helping', 'Farmers supported', formatMetricValue(s.total_farmers_supported), 'Unique farmers by name and phone number')
             );
 
             if (preschool) {
@@ -5129,12 +5164,6 @@
                     'fa-school',
                     'theme-preschool',
                     prePeriodText,
-                    cmsDashStat(
-                        'fa-child',
-                        'Children in previous years',
-                        formatMetricValue(preschool.previous_years_enrollment),
-                        'Enrolled before ' + (preschoolCurrentYear || 'the current year')
-                    ) +
                     cmsDashStat(
                         'fa-graduation-cap',
                         'Current enrollment',
@@ -5184,6 +5213,7 @@
                 ).catch(function () { return []; }),
                 supabaseRestWithTimeout('ploughing_records?select=hours_ploughed,families_impacted,hectares_ploughed'),
                 supabaseRestWithTimeout('maize_buyback_records?select=kilograms_bought,farmers_impacted'),
+                supabaseRestWithTimeout('icbc_sites?select=water_source').catch(function () { return []; }),
                 supabaseRestWithTimeout('preschool_enrollment?select=children_count'),
                 supabaseRestWithTimeout('staff?select=role').catch(function () { return []; })
             ]).then(function (results) {
@@ -5192,8 +5222,9 @@
                 var weeklyRows = results[2] || [];
                 var plough = results[3] || [];
                 var maize = results[4] || [];
-                var preschool = results[5] || [];
-                var staffRows = results[6] || [];
+                var siteWaterRows = results[5] || [];
+                var preschool = results[6] || [];
+                var staffRows = results[7] || [];
                 var staffCount = computeNetworkStaffTotal(staffRows);
 
                 var sundayDates = {};
@@ -5237,14 +5268,18 @@
                 });
 
                 var mapped = 0;
+                var wellsBuilt = 0;
                 sites.forEach(function (site) {
                     var lat = parseMapCoord(site.latitude);
                     var lng = parseMapCoord(site.longitude);
                     if (!isNaN(lat) && !isNaN(lng)) mapped += 1;
                 });
+                siteWaterRows.forEach(function (site) {
+                    wellsBuilt += countWellsBuiltFromWaterSource(site.water_source);
+                });
 
                 var weeksRecorded = Object.keys(sundayDates).length;
-                return {
+                return applyNetworkImpactSeed({
                     icbc_sites_planted: sites.length,
                     icbc_sites_mapped: mapped,
                     weeks_recorded: weeksRecorded,
@@ -5258,9 +5293,10 @@
                     total_hectares_ploughed: hectaresPloughed,
                     total_maize_kg: maizeKg,
                     total_farmers_supported: farmers,
+                    total_wells_built: wellsBuilt,
                     total_preschool_children: preschoolChildren,
                     total_staff: staffCount
-                };
+                });
             });
         }
 
@@ -5298,6 +5334,7 @@
                         total_staff: staffBreakdown.total,
                         total_compassionate_care: compassionateCareTotal
                     });
+                    stats = applyNetworkImpactSeed(stats);
                     var heading = root.querySelector('.sidebar-section-head');
                     var headHtml = heading ? heading.outerHTML : '';
                     root.innerHTML = headHtml + renderCmsNetworkImpactBody(
@@ -5768,17 +5805,9 @@
                         title: 'Current enrollment (' + (pre.current_year || '—') + ')',
                         value: formatMetricValue(pre.current_enrollment)
                     });
-                    preStats.push({
-                        title: 'Previous years impacted',
-                        value: formatMetricValue(pre.previous_years_impact)
-                    });
                     if (pre.teachers_count != null && pre.teachers_count > 0) {
                         preStats.push({ title: 'Teachers', value: pre.teachers_count });
                     }
-                    preStats.push({
-                        title: 'Total children through programme',
-                        value: formatMetricValue(pre.total_children_impacted)
-                    });
                 } else {
                     preStats.push({ title: 'Children enrolled', value: pre.children_count });
                     if (pre.teachers_count != null && pre.teachers_count > 0) {
@@ -5820,7 +5849,7 @@
                         value: formatMetricValue(maizeAgg.farmers)
                     });
                 }
-                if (maizeAgg && maizeAgg.tonnes > 0) {
+                if (maizeAgg && maizeAgg.tonnes > 0 && maize.length <= 1) {
                     maizeStats.push({
                         title: 'Maize purchased (metric tonnes)',
                         value: formatMetricValue(maizeAgg.tonnes, maizeAgg.tonnes < 10 ? 2 : 1)
