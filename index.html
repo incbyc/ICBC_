@@ -2700,6 +2700,16 @@
             color: #80868b;
         }
 
+        .sidebar-attendance-as-at {
+            margin-top: -4px;
+            font-size: 11px;
+            font-weight: 400;
+            letter-spacing: 0;
+            text-transform: none;
+            color: #9aa0a6;
+            line-height: 1.3;
+        }
+
         .sidebar-attendance-hero {
             text-align: center;
             padding: 10px 10px;
@@ -5170,6 +5180,15 @@
                         formatMetricValue(preschool.current_children),
                         preschoolCurrentYear ? 'As at ' + preschoolCurrentYear : 'Latest year on record'
                     ) +
+                    cmsDashStat(
+                        'fa-child',
+                        'Children through programme',
+                        formatMetricValue(
+                            (Number(preschool.previous_years_enrollment) || 0) +
+                            (Number(preschool.current_children) || 0)
+                        ),
+                        'Current year + previous years'
+                    ) +
                     (preschool.current_teachers > 0
                         ? cmsDashStat(
                             'fa-chalkboard-teacher',
@@ -5626,7 +5645,22 @@
             return labels[key] || fallbackTitle;
         }
 
-        function renderAttendanceStatisticsPanel(attendanceCards) {
+        function formatAttendanceAsAtMonth(dateValue) {
+            var raw = String(dateValue || '').trim();
+            if (!raw) return '';
+            var match = raw.match(/^(\d{4})-(\d{2})/);
+            if (!match) return '';
+            var year = Number(match[1]);
+            var monthIndex = Number(match[2]) - 1;
+            var labels = [
+                'January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'
+            ];
+            if (monthIndex < 0 || monthIndex > 11 || !year) return '';
+            return labels[monthIndex] + ' ' + year;
+        }
+
+        function renderAttendanceStatisticsPanel(attendanceCards, asAtMonth) {
             if (!attendanceCards.length) return '';
 
             var hero = null;
@@ -5642,6 +5676,10 @@
 
             var html = '<div class="sidebar-attendance-panel">';
             html += '<div class="sidebar-attendance-panel-head">Sunday attendance averages</div>';
+            if (asAtMonth) {
+                html += '<div class="sidebar-attendance-as-at">as at ' +
+                    escapeHtml(asAtMonth) + '</div>';
+            }
 
             if (hero) {
                 html += '<div class="sidebar-attendance-hero">' +
@@ -5665,7 +5703,7 @@
             return html;
         }
 
-        function renderSidebarStatisticsSection(metrics) {
+        function renderSidebarStatisticsSection(metrics, asAtMonth) {
             var statMetrics = pickStatisticsMetrics(metrics);
             if (!statMetrics.length) return '';
 
@@ -5686,7 +5724,7 @@
                 '<div class="sidebar-stats-body">';
 
             if (attendanceCards.length) {
-                html += renderAttendanceStatisticsPanel(attendanceCards);
+                html += renderAttendanceStatisticsPanel(attendanceCards, asAtMonth);
             }
             if (otherCards.length) {
                 if (attendanceCards.length) {
@@ -5795,7 +5833,10 @@
             var siteSlug = (sidebarBody && sidebarBody.dataset.siteSlug) || '';
             html += renderSidebarRainfallChart(siteSlug, dashboard.rainfall || null);
             var metrics = dashboard.metrics || [];
-            html += renderSidebarStatisticsSection(metrics);
+            html += renderSidebarStatisticsSection(
+                metrics,
+                formatAttendanceAsAtMonth(dashboard.weekly_stats_as_at || dashboard.last_stat_date)
+            );
 
             var pre = dashboard.preschool;
             if (pre && (pre.total_children_impacted > 0 || pre.current_enrollment > 0 || pre.children_count > 0)) {
@@ -5807,6 +5848,12 @@
                     });
                     if (pre.teachers_count != null && pre.teachers_count > 0) {
                         preStats.push({ title: 'Teachers', value: pre.teachers_count });
+                    }
+                    if (pre.total_children_impacted > 0) {
+                        preStats.push({
+                            title: 'Children through programme',
+                            value: formatMetricValue(pre.total_children_impacted)
+                        });
                     }
                 } else {
                     preStats.push({ title: 'Children enrolled', value: pre.children_count });
@@ -5936,7 +5983,9 @@
                 ploughing_totals: dash.ploughing_totals ? Object.assign({}, dash.ploughing_totals) : null,
                 maize_buyback: (dash.maize_buyback || []).slice(),
                 rainfall: (dash.rainfall || []).slice(),
-                site: dash.site ? Object.assign({}, dash.site) : null
+                site: dash.site ? Object.assign({}, dash.site) : null,
+                last_stat_date: dash.last_stat_date || '',
+                weekly_stats_as_at: dash.weekly_stats_as_at || ''
             };
         }
 
@@ -5974,6 +6023,8 @@
                     return !weeklyKeys[m.key];
                 });
                 dash.metrics = dash.metrics.concat(sidebarMetrics || []);
+                dash.last_stat_date = data.last_stat_date || stats.last_stat_date || dash.last_stat_date || '';
+                dash.weekly_stats_as_at = formatAttendanceAsAtMonth(dash.last_stat_date);
             }
 
             var preAgg = aggregatePreschoolEnrollment(data.preschool_enrollment);
@@ -6057,7 +6108,11 @@
                     return Promise.all([
                         supabaseRest('preschool_enrollment?site_id=eq.' + encodeURIComponent(siteId) + '&select=year,children_count,teachers_count&order=year.desc'),
                         supabaseRest('ploughing_records?site_id=eq.' + encodeURIComponent(siteId) + '&select=*&order=year.desc'),
-                        supabaseRest('maize_buyback_records?site_id=eq.' + encodeURIComponent(siteId) + '&select=*&order=year.desc')
+                        supabaseRest('maize_buyback_records?site_id=eq.' + encodeURIComponent(siteId) + '&select=*&order=year.desc'),
+                        supabaseRest(
+                            'weekly_stats?site_id=eq.' + encodeURIComponent(siteId) +
+                            '&select=stat_date&order=stat_date.desc&limit=1'
+                        ).catch(function () { return []; })
                     ]).then(function (programmeRows) {
                         return {
                             sidebar: sidebar,
@@ -6067,7 +6122,10 @@
                             rainfallRows: rainfallRows,
                             preschool_enrollment: programmeRows[0] || [],
                             ploughing: programmeRows[1] || [],
-                            maize: programmeRows[2] || []
+                            maize: programmeRows[2] || [],
+                            last_stat_date: (programmeRows[3] && programmeRows[3][0] && programmeRows[3][0].stat_date) ||
+                                (stats && stats.last_stat_date) ||
+                                ''
                         };
                     });
                 })
