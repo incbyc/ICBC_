@@ -4966,22 +4966,6 @@
                     '#c62828',
                     'integer'
                 ) +
-                renderCmsTrendLineChart(
-                    'Salvations',
-                    'Cumulative total across the network',
-                    series,
-                    'cumulativeSalvations',
-                    '#6a1b9a',
-                    'integer'
-                ) +
-                renderCmsTrendLineChart(
-                    'Baptisms',
-                    'Cumulative total across the network',
-                    series,
-                    'cumulativeBaptisms',
-                    '#0277bd',
-                    'integer'
-                ) +
                 '</div>';
         }
 
@@ -5162,18 +5146,15 @@
                 'theme-maize',
                 maizePeriod ? 'Buy-back seasons ' + maizePeriod : 'Maize sustainability programme',
                 cmsDashStat('fa-balance-scale', 'Maize purchased (tonnes)', formatMetricValue(maizeTonnes, maizeTonnes < 10 ? 2 : 1)) +
-                cmsDashStat('fa-hands-helping', 'Farmers supported', formatMetricValue(s.total_farmers_supported), 'Unique farmers by name and phone number')
+                cmsDashStat('fa-hands-helping', 'Farmers supported', formatMetricValue(s.total_farmers_supported))
             );
 
             if (preschool) {
-                var prePeriodText = preschoolPeriod
-                    ? 'Enrollment records ' + preschoolPeriod
-                    : 'Pre-school across the ICBC network';
                 html += cmsDashSection(
                     'Pre-school',
                     'fa-school',
                     'theme-preschool',
-                    prePeriodText,
+                    'Pre-school across the ICBC network',
                     cmsDashStat(
                         'fa-graduation-cap',
                         'Current enrollment',
