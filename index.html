@@ -5114,12 +5114,6 @@
                 cmsDashStat('fa-home', 'Home visits', formatMetricValue(s.total_home_visits))
             );
 
-            if (weeklyTrendRows && weeklyTrendRows.length) {
-                html += '<div class="cms-dash-trends-wrap">' +
-                    renderCmsReachTrendCharts(weeklyTrendRows) +
-                    '</div>';
-            }
-
             html += cmsDashSection(
                 'Ploughing project',
                 'fa-tractor',
@@ -5626,22 +5620,23 @@
             return labels[key] || fallbackTitle;
         }
 
-        function formatAttendanceAsAtMonth(dateValue) {
+        function formatAttendanceAsAtLastSunday(dateValue) {
             var raw = String(dateValue || '').trim();
             if (!raw) return '';
-            var match = raw.match(/^(\d{4})-(\d{2})/);
+            var match = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
             if (!match) return '';
             var year = Number(match[1]);
             var monthIndex = Number(match[2]) - 1;
+            var day = Number(match[3]);
             var labels = [
                 'January', 'February', 'March', 'April', 'May', 'June',
                 'July', 'August', 'September', 'October', 'November', 'December'
             ];
-            if (monthIndex < 0 || monthIndex > 11 || !year) return '';
-            return labels[monthIndex] + ' ' + year;
+            if (monthIndex < 0 || monthIndex > 11 || !year || !day) return '';
+            return 'last recorded Sunday · ' + day + ' ' + labels[monthIndex] + ' ' + year;
         }
 
-        function renderAttendanceStatisticsPanel(attendanceCards, asAtMonth) {
+        function renderAttendanceStatisticsPanel(attendanceCards, asAtLabel) {
             if (!attendanceCards.length) return '';
 
             var hero = null;
@@ -5657,9 +5652,9 @@
 
             var html = '<div class="sidebar-attendance-panel">';
             html += '<div class="sidebar-attendance-panel-head">Sunday attendance averages</div>';
-            if (asAtMonth) {
+            if (asAtLabel) {
                 html += '<div class="sidebar-attendance-as-at">as at ' +
-                    escapeHtml(asAtMonth) + '</div>';
+                    escapeHtml(asAtLabel) + '</div>';
             }
 
             if (hero) {
@@ -5684,7 +5679,7 @@
             return html;
         }
 
-        function renderSidebarStatisticsSection(metrics, asAtMonth) {
+        function renderSidebarStatisticsSection(metrics, asAtLabel) {
             var statMetrics = pickStatisticsMetrics(metrics);
             if (!statMetrics.length) return '';
 
@@ -5705,7 +5700,7 @@
                 '<div class="sidebar-stats-body">';
 
             if (attendanceCards.length) {
-                html += renderAttendanceStatisticsPanel(attendanceCards, asAtMonth);
+                html += renderAttendanceStatisticsPanel(attendanceCards, asAtLabel);
             }
             if (otherCards.length) {
                 if (attendanceCards.length) {
@@ -5816,7 +5811,9 @@
             var metrics = dashboard.metrics || [];
             html += renderSidebarStatisticsSection(
                 metrics,
-                formatAttendanceAsAtMonth(dashboard.weekly_stats_as_at || dashboard.last_stat_date)
+                dashboard.last_stat_date
+                    ? formatAttendanceAsAtLastSunday(dashboard.last_stat_date)
+                    : (dashboard.weekly_stats_as_at || '')
             );
 
             var pre = dashboard.preschool;
@@ -6005,7 +6002,7 @@
                 });
                 dash.metrics = dash.metrics.concat(sidebarMetrics || []);
                 dash.last_stat_date = data.last_stat_date || stats.last_stat_date || dash.last_stat_date || '';
-                dash.weekly_stats_as_at = formatAttendanceAsAtMonth(dash.last_stat_date);
+                dash.weekly_stats_as_at = formatAttendanceAsAtLastSunday(dash.last_stat_date);
             }
 
             var preAgg = aggregatePreschoolEnrollment(data.preschool_enrollment);
