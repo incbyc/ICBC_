@@ -4675,10 +4675,11 @@
             }
         }
 
+        // Match supabase/weekly_stats_sidebar_view.sql (value must be GREATER THAN threshold).
         var SIDEBAR_MIN = {
-            salvations: 20,
-            baptisms: 20,
-            homeVisits: 10,
+            salvations: 10,
+            baptisms: 10,
+            homeVisits: 50,
             ploughHours: 20
         };
 
@@ -5459,6 +5460,49 @@
             });
         }
 
+        function averageWeeklyField(rows, field) {
+            if (!rows || !rows.length) return null;
+            var sum = 0;
+            rows.forEach(function (row) {
+                sum += Number(row[field]) || 0;
+            });
+            return Math.round((sum / rows.length) * 10) / 10;
+        }
+
+        function injectAttendanceBreakdownMetrics(dashboard, averages) {
+            if (!dashboard || !averages) return dashboard;
+            [
+                { key: 'avg_men', title: 'Avg men', field: 'avg_men' },
+                { key: 'avg_women', title: 'Avg women', field: 'avg_women' },
+                { key: 'avg_youth', title: 'Avg youth', field: 'avg_youth' },
+                { key: 'avg_children', title: 'Avg children', field: 'avg_children' }
+            ].forEach(function (def) {
+                if (hasDashboardMetricKey(dashboard.metrics, def.key)) return;
+                var val = Number(averages[def.field]);
+                if (isNaN(val)) return;
+                dashboard.metrics.push({
+                    key: def.key,
+                    title: def.title,
+                    value: val,
+                    format: 'decimal'
+                });
+            });
+            return dashboard;
+        }
+
+        function injectWeeklyDemographicsFromRows(dashboard, weeklyRows) {
+            var attended = (weeklyRows || []).filter(function (row) {
+                return (Number(row.total_attendance) || 0) > 0;
+            });
+            if (!attended.length) return dashboard;
+            return injectAttendanceBreakdownMetrics(dashboard, {
+                avg_men: averageWeeklyField(attended, 'men'),
+                avg_women: averageWeeklyField(attended, 'women'),
+                avg_youth: averageWeeklyField(attended, 'youth'),
+                avg_children: averageWeeklyField(attended, 'children')
+            });
+        }
+
         function injectWeeklyDemographicsMetrics(dashboard, siteSlug) {
             var slug = String(siteSlug || '').trim().toLowerCase();
             if (!slug) return dashboard;
@@ -5468,24 +5512,7 @@
                 : null;
             if (!weekly || !(Number(weekly.weeks_recorded) > 0)) return dashboard;
 
-            [
-                { key: 'avg_men', title: 'Avg men', field: 'avg_men' },
-                { key: 'avg_women', title: 'Avg women', field: 'avg_women' },
-                { key: 'avg_youth', title: 'Avg youth', field: 'avg_youth' },
-                { key: 'avg_children', title: 'Avg children', field: 'avg_children' }
-            ].forEach(function (def) {
-                if (hasDashboardMetricKey(dashboard.metrics, def.key)) return;
-                var val = Number(weekly[def.field]);
-                if (isNaN(val)) return;
-                dashboard.metrics.push({
-                    key: def.key,
-                    title: def.title,
-                    value: val,
-                    format: 'decimal'
-                });
-            });
-
-            return dashboard;
+            return injectAttendanceBreakdownMetrics(dashboard, weekly);
         }
 
         function getCompassionateCareMemberCount(siteSlug) {
@@ -5549,6 +5576,7 @@
                 });
             }
 
+            dashboard = injectWeeklyDemographicsFromRows(dashboard, dashboard._weekly_stat_rows);
             return injectWeeklyDemographicsMetrics(dashboard, siteSlug);
         }
 
@@ -6004,6 +6032,9 @@
                 dash.last_stat_date = data.last_stat_date || stats.last_stat_date || dash.last_stat_date || '';
                 dash.weekly_stats_as_at = formatAttendanceAsAtLastSunday(dash.last_stat_date);
             }
+            // Live view may be outdated (attendance only). Keep raw weeks so
+            // men/women/youth/children averages can still be injected below.
+            dash._weekly_stat_rows = data.weekly_stat_rows || [];
 
             var preAgg = aggregatePreschoolEnrollment(data.preschool_enrollment);
             if (preAgg) {
@@ -6089,9 +6120,11 @@
                         supabaseRest('maize_buyback_records?site_id=eq.' + encodeURIComponent(siteId) + '&select=*&order=year.desc'),
                         supabaseRest(
                             'weekly_stats?site_id=eq.' + encodeURIComponent(siteId) +
-                            '&select=stat_date&order=stat_date.desc&limit=1'
+                            '&select=stat_date,total_attendance,men,women,youth,children' +
+                            '&order=stat_date.desc&limit=120'
                         ).catch(function () { return []; })
                     ]).then(function (programmeRows) {
+                        var weeklyRows = programmeRows[3] || [];
                         return {
                             sidebar: sidebar,
                             stats: stats,
@@ -6101,7 +6134,8 @@
                             preschool_enrollment: programmeRows[0] || [],
                             ploughing: programmeRows[1] || [],
                             maize: programmeRows[2] || [],
-                            last_stat_date: (programmeRows[3] && programmeRows[3][0] && programmeRows[3][0].stat_date) ||
+                            weekly_stat_rows: weeklyRows,
+                            last_stat_date: (weeklyRows[0] && weeklyRows[0].stat_date) ||
                                 (stats && stats.last_stat_date) ||
                                 ''
                         };
