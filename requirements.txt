@@ -4,6 +4,6 @@ openpyxl
 pandas
 streamlit
 supabase>=2.0,<3.0
-streamlit-cropper>=0.2.2,<0.3
+streamlit-cropper>=0.3.1,<0.4
 Pillow>=10.0,<12.0
 
