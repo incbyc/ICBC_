@@ -5,5 +5,5 @@ pandas
 streamlit
 supabase>=2.0,<3.0
 streamlit-cropper>=0.2.2,<0.3
-Pillow>=10.0,<12.0
+Pillow>=12.2.0,<13.0
 
