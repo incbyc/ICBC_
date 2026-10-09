@@ -1166,16 +1166,38 @@ def maybe_sync_supabase(config: TableConfig, row: dict[str, str], *, deleted: bo
         st.warning(f"Local CSV saved, but Supabase sync failed: {exc}")
 
 
-def maybe_sync_all_supabase(config: TableConfig, columns: list[str]) -> None:
+def flash(kind: str, message: str) -> None:
+    """Queue a message that survives the st.rerun() after a save."""
+    st.session_state.setdefault("flash_messages", []).append((kind, message))
+
+
+def show_flash_messages() -> None:
+    for kind, message in st.session_state.pop("flash_messages", []):
+        getattr(st, kind)(message)
+
+
+def maybe_sync_all_supabase(
+    config: TableConfig,
+    columns: list[str],
+    rows: list[dict[str, str]] | None = None,
+) -> None:
+    """Push `rows` (default: the whole seed file) to Supabase."""
     client = get_supabase_sync_client()
     if not client:
+        flash(
+            "warning",
+            "Saved to the local CSV only. Supabase sync is off, so the live map will not change. "
+            "Add the service role key in the sidebar and tick **Sync to Supabase on save**.",
+        )
         return
-    rows = read_seed_rows(config, columns)
+    if rows is None:
+        rows = read_seed_rows(config, columns)
     try:
-        message = client.sync_all(config.key, rows)
-        st.success(message)
+        with st.spinner(f"Pushing {len(rows)} row(s) to Supabase…"):
+            message = client.sync_all(config.key, rows)
+        flash("success", f"Supabase: {message}")
     except Exception as exc:
-        st.error(f"Supabase bulk sync failed: {exc}")
+        flash("error", f"Supabase sync problem: {exc}")
 
 
 def render_media_uploads(config: TableConfig, key_prefix: str):
@@ -1582,8 +1604,8 @@ def render_bulk_csv_upload(config: TableConfig, columns: list[str]) -> None:
 
     if st.button(f"Merge CSV into {config.file_name}", key=f"{config.key}-merge-csv"):
         inserted, updated = upsert_rows(config, columns, rows)
-        maybe_sync_all_supabase(config, columns)
-        st.success(f"Merged CSV into `{config.path}`. Inserted: {inserted}, updated: {updated}.")
+        flash("success", f"Merged CSV into `{config.path}`. Inserted: {inserted}, updated: {updated}.")
+        maybe_sync_all_supabase(config, columns, rows)
         st.rerun()
 
 
@@ -1623,10 +1645,11 @@ def render_weekly_excel_upload(config: TableConfig, columns: list[str]) -> None:
 
     if st.button("Merge workbook into weekly_stats.csv", key="weekly-stats-merge-workbook"):
         inserted, updated = upsert_rows(config, columns, rows)
-        maybe_sync_all_supabase(config, columns)
-        st.success(
-            f"Merged workbook rows into `{config.path}`. Inserted: {inserted}, updated: {updated}."
+        flash(
+            "success",
+            f"Merged workbook rows into `{config.path}`. Inserted: {inserted}, updated: {updated}.",
         )
+        maybe_sync_all_supabase(config, columns, rows)
         st.rerun()
 
 
@@ -1668,6 +1691,7 @@ def render_table_tab(
         st.caption("Upload the full seed file for this tab to Supabase (upserts matching keys).")
         if st.button(f"Push all {config.title} to Supabase", key=f"{config.key}-push-all"):
             maybe_sync_all_supabase(config, columns)
+            show_flash_messages()
     st.divider()
     render_bulk_csv_upload(config, columns)
     if config.key == "weekly_stats":
@@ -1752,6 +1776,7 @@ def main() -> None:
     )
 
     repo_slug, branch, url_style, media_root = sidebar_settings()
+    show_flash_messages()
     site_config = TABLE_CONFIGS["icbc_sites"]
     site_columns = seed_columns(site_config)
     site_rows = load_icbc_sites_for_picker(site_config, site_columns)

@@ -307,6 +307,8 @@ class SupabaseSeedSync:
         raise ValueError(f"Unsupported table key: {table_key}")
 
     def sync_all(self, table_key: str, rows: list[dict[str, str]]) -> str:
+        if table_key == "weekly_stats":
+            return self._sync_weekly_stats_bulk(rows)
         synced = 0
         errors: list[str] = []
         for row in rows:
@@ -446,13 +448,39 @@ class SupabaseSeedSync:
         ).execute()
         return f"Synced rainfall month `{payload['month']}` to Supabase."
 
-    def _sync_weekly_stat(self, row: dict[str, str]) -> str:
-        site_id = self._site_id_for_church(row.get("church", ""))
-        if not site_id:
-            raise ValueError(
-                f"Church `{row.get('church')}` does not match any `icbc_sites.name` in Supabase."
+    def _sync_weekly_stats_bulk(self, rows: list[dict[str, str]], batch_size: int = 500) -> str:
+        # Thousands of weekly rows: upsert in batches rather than one request per row.
+        payloads: dict[tuple[str, str], dict[str, Any]] = {}
+        unmatched: dict[str, int] = {}
+        for row in rows:
+            site_id = self._site_id_for_church(row.get("church", ""))
+            if not site_id:
+                church = _text(row.get("church")) or "(blank)"
+                unmatched[church] = unmatched.get(church, 0) + 1
+                continue
+            payload = self._weekly_stat_payload(site_id, row)
+            # One row per site/date per batch, or Postgres rejects the upsert.
+            payloads[(site_id, payload["stat_date"])] = payload
+
+        batch = list(payloads.values())
+        for start in range(0, len(batch), batch_size):
+            self.client.table("weekly_stats").upsert(
+                batch[start:start + batch_size],
+                on_conflict="site_id,stat_date",
+            ).execute()
+
+        message = f"Synced {len(batch)} weekly stat row(s) to Supabase."
+        if unmatched:
+            names = ", ".join(f"`{name}` ({count})" for name, count in sorted(unmatched.items()))
+            raise RuntimeError(
+                f"{message} Skipped {sum(unmatched.values())} row(s) whose church does not match any "
+                f"`icbc_sites.name` in Supabase: {names}. Rename the church in the workbook or add the site, "
+                "then upload again."
             )
-        payload = {
+        return message
+
+    def _weekly_stat_payload(self, site_id: str, row: dict[str, str]) -> dict[str, Any]:
+        return {
             "site_id": site_id,
             "stat_date": _text(row.get("date")),
             "total_attendance": _int_or_none(row.get("total_attendance")) or 0,
@@ -466,6 +494,14 @@ class SupabaseSeedSync:
             "meals_food_packs": _int_or_none(row.get("meals_food_packs")) or 0,
             "preschool_attendance": _int_or_none(row.get("preschool_attendance")) or 0,
         }
+
+    def _sync_weekly_stat(self, row: dict[str, str]) -> str:
+        site_id = self._site_id_for_church(row.get("church", ""))
+        if not site_id:
+            raise ValueError(
+                f"Church `{row.get('church')}` does not match any `icbc_sites.name` in Supabase."
+            )
+        payload = self._weekly_stat_payload(site_id, row)
         self.client.table("weekly_stats").upsert(
             payload,
             on_conflict="site_id,stat_date",

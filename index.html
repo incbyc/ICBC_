@@ -4782,7 +4782,7 @@
 
             function page() {
                 return supabaseRestWithTimeout(
-                    'weekly_stats?select=stat_date,total_attendance,salvations,baptisms' +
+                    'weekly_stats?select=stat_date,total_attendance,salvations,baptisms,men,women,youth,children' +
                     '&order=stat_date.asc&limit=' + pageSize + '&offset=' + offset,
                     30000
                 ).then(function (batch) {
@@ -4823,7 +4823,11 @@
                             stat_date: cells[hi.date],
                             total_attendance: cells[hi.total_attendance],
                             salvations: cells[hi.salvations],
-                            baptisms: cells[hi.baptisms]
+                            baptisms: cells[hi.baptisms],
+                            men: cells[hi.men],
+                            women: cells[hi.women],
+                            youth: cells[hi.youth],
+                            children: cells[hi.children]
                         });
                     }
                     return out;
@@ -5044,6 +5048,20 @@
             }).length;
         }
 
+        // Same basis as avg_attendance: mean per site per Sunday, over rows with attendance > 0.
+        function computeNetworkAttendanceBreakdown(weeklyRows) {
+            var attended = (weeklyRows || []).filter(function (row) {
+                return (Number(row.total_attendance) || 0) > 0;
+            });
+            if (!attended.length) return {};
+            return {
+                avg_men: averageWeeklyField(attended, 'men'),
+                avg_women: averageWeeklyField(attended, 'women'),
+                avg_youth: averageWeeklyField(attended, 'youth'),
+                avg_children: averageWeeklyField(attended, 'children')
+            };
+        }
+
         function renderCmsNetworkImpactBody(stats, preschool, periods, weeklyTrendRows) {
             var s = stats || {};
             var p = periods || {};
@@ -5110,8 +5128,14 @@
                 'theme-worship',
                 worshipPeriod,
                 cmsDashStat('fa-users', 'Avg attendance', formatMetricValue(s.avg_attendance, 1), avgHint) +
+                (s.avg_men != null
+                    ? cmsDashStat('fa-male', 'Avg men', formatMetricValue(s.avg_men, 1), 'Per site, per Sunday') +
+                        cmsDashStat('fa-female', 'Avg women', formatMetricValue(s.avg_women, 1), 'Per site, per Sunday') +
+                        cmsDashStat('fa-user-friends', 'Avg youth', formatMetricValue(s.avg_youth, 1), 'Per site, per Sunday') +
+                        cmsDashStat('fa-child', 'Avg children', formatMetricValue(s.avg_children, 1), 'Per site, per Sunday')
+                    : '') +
                 cmsDashStat('fa-heart', 'Salvations', formatMetricValue(s.total_salvations)) +
-                cmsDashStat('fa-water', 'Baptisms', formatMetricValue(s.total_baptisms)) +
+                cmsDashStat('fa-dove', 'Baptisms', formatMetricValue(s.total_baptisms)) +
                 cmsDashStat('fa-home', 'Home visits', formatMetricValue(s.total_home_visits))
             );
 
@@ -5308,7 +5332,8 @@
                 aggregateNetworkPreschoolDetailed().catch(function () { return null; }),
                 fetchCmsStatPeriods().catch(function () { return {}; }),
                 supabaseRestWithTimeout('staff?select=role').catch(function () { return []; }),
-                fetchCmsWeeklyTrendData().catch(function () { return []; })
+                fetchCmsWeeklyTrendData().catch(function () { return []; }),
+                supabaseRestWithTimeout('icbc_sites?select=water_source').catch(function () { return []; })
             ])
                 .then(function (results) {
                     if (loadToken !== cmsNetworkLoadToken) return;
@@ -5317,6 +5342,7 @@
                     var periods = results[3];
                     var staffRows = results[4] || [];
                     var weeklyTrendRows = results[5] || [];
+                    var siteWaterRows = results[6] || [];
                     var compassionateCareTotal = getNetworkCompassionateCareTotal();
                     var staffBreakdown = computeNetworkStaffBreakdown(
                         staffRows,
@@ -5328,7 +5354,13 @@
                         staff_compassionate_care: staffBreakdown.compassionate_care,
                         total_staff: staffBreakdown.total,
                         total_compassionate_care: compassionateCareTotal
-                    });
+                    }, computeNetworkAttendanceBreakdown(weeklyTrendRows));
+                    // The summary view has no wells column, so count wells from each site's water source.
+                    if (siteWaterRows.length) {
+                        stats.total_wells_built = siteWaterRows.reduce(function (sum, site) {
+                            return sum + countWellsBuiltFromWaterSource(site.water_source);
+                        }, 0);
+                    }
                     stats = applyNetworkImpactSeed(stats);
                     var heading = root.querySelector('.sidebar-section-head');
                     var headHtml = heading ? heading.outerHTML : '';
