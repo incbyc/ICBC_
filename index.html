@@ -7072,7 +7072,8 @@
                 '<label><input type="checkbox" class="js-google-roads"> Road names</label>' +
                 '<label><input type="checkbox" class="js-google-places"> Place names</label>';
 
-            layersControl.insertBefore(googleLabelOptionsEl, insertBefore);
+            // Leaflet nests base/overlay lists inside a <section>, so insert via the real parent.
+            insertBefore.parentNode.insertBefore(googleLabelOptionsEl, insertBefore);
 
             toggleGoogleRoads = googleLabelOptionsEl.querySelector('.js-google-roads');
             toggleGooglePlaces = googleLabelOptionsEl.querySelector('.js-google-places');
