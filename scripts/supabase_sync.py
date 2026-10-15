@@ -300,6 +300,7 @@ class SupabaseSeedSync:
             (
                 self.client.table("bubele_care_sites")
                 .delete()
+                .eq("site_name", _text(row.get("site_name")))
                 .eq("family_code", _text(row.get("family_code")))
                 .execute()
             )
@@ -515,12 +516,14 @@ class SupabaseSeedSync:
             "region": _text(row.get("region")),
             "latitude": _float_or_none(row.get("latitude")),
             "longitude": _float_or_none(row.get("longitude")),
+            "children_count": _int_or_none(row.get("children_count")) or 0,
         }
+        # Some family codes repeat across areas, so name + code identifies a family.
         self.client.table("bubele_care_sites").upsert(
             payload,
-            on_conflict="family_code",
+            on_conflict="site_name,family_code",
         ).execute()
-        return f"Synced Bubele Care `{payload['family_code']}` to Supabase."
+        return f"Synced Bubele Care `{payload['site_name']} · {payload['family_code']}` to Supabase."
 
 
 def build_sync_client(url: str, service_role_key: str) -> SupabaseSeedSync | None:
