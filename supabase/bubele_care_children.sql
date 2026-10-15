@@ -1,0 +1,70 @@
+-- Bubele Care: add number of children per family and reload the family list.
+-- Run once in the Supabase SQL Editor (safe to re-run).
+--
+-- Some families share a family code (e.g. BC(BMS)18 is used at Matitila and Mahwalala),
+-- so a family is identified by site name + family code instead of family code alone.
+
+alter table public.bubele_care_sites
+    add column if not exists children_count integer not null default 0;
+
+alter table public.bubele_care_sites
+    drop constraint if exists bubele_care_sites_family_code_key;
+
+do $$
+begin
+    if not exists (
+        select 1 from pg_constraint where conname = 'bubele_care_sites_site_name_family_code_key'
+    ) then
+        alter table public.bubele_care_sites
+            add constraint bubele_care_sites_site_name_family_code_key unique (site_name, family_code);
+    end if;
+end $$;
+
+-- Replace the old list with the current one (supabase/seed/bubele_care_sites.csv).
+begin;
+delete from public.bubele_care_sites;
+insert into public.bubele_care_sites (site_name, family_code, region, latitude, longitude, children_count)
+values
+    ('Big Bend', 'BC(BMS)86', 'Lubombo', -26.454672, 31.9594845, 1),
+    ('Emvembili', 'BC(BMS)89', 'Hhohho', -25.783396, 31.361168, 1),
+    ('Hlatsi', 'BC(BMS)112', 'Shiselweni', -27.002202, 31.346468, 1),
+    ('Hluthi', 'BC(BMS)42', 'Shiselweni', -27.1312, 31.37087, 1),
+    ('Lomshiyo', 'BC(BMS)25', 'Hhohho', -25.818002, 31.319995, 3),
+    ('Lushikishini', 'BC(BMS)67', 'Manzini', -26.782897, 30.866387, 2),
+    ('Luyengo', 'BC(BMS)13', 'Manzini', -26.5480066, 31.125202, 1),
+    ('Macetjeni', 'BC(BMS)24', 'Lubombo', -26.553958, 31.620354, 3),
+    ('Mahwalala', 'BC(BMS)18', 'Hhohho', -26.327569, 31.101856, 1),
+    ('Maliyaduma', 'BC(BMS)05', 'Manzini', -26.438297, 31.414532, 1),
+    ('Mankayane', 'BC(BMS)F01', 'Manzini', -26.734664, 30.999813, 1),
+    ('Mankayane', 'BC(BMS)F03', 'Manzini', -26.415, 31.04485, 1),
+    ('Mankayne', 'BC(BMS)87', 'Manzini', -26.700847, 31.038361, 1),
+    ('Maphalaleni', 'BC(BMS)12', 'Hhohho', -26.233079, 31.306327, 4),
+    ('Matitila', 'BC(BMS)18', 'Hhohho', -26.04755, 31.20538, 1),
+    ('Mbadlane', 'BC(BMS)16', 'Lubombo', -26.394075, 31.667276, 2),
+    ('Mbadlane', 'BC(BMS)39', 'Lubombo', -26.443801, 31.7125005, 1),
+    ('Mcetjeni', 'BC(BMS)118', 'Lubombo', -26.552125, 31.717485, 1),
+    ('Mekelweni', 'BC(BMS)', 'Hhohho', -26.441553, 31.344842, 1),
+    ('Mkhulamini', 'BC(BMS)26', 'Manzini', -26.436654, 31.369608, 1),
+    ('Mkhuzweni', 'BC(BMS)61', 'Hhohho', -25.882691, 31.507814, 1),
+    ('Motjane', 'BC(BMS)28', 'Hhohho', -26.259311, 31.072664, 4),
+    ('Motshane', 'BC(BMS)28', 'Hhohho', -26.174, 31.151092, 4),
+    ('Mpaka', 'BC(BMS)38', 'Lubombo', -26.733007, 31.721422, 1),
+    ('Mphosi', 'BC(BMS)119', 'Lubombo', -26.552925, 31.617414, 1),
+    ('Mpolonjeni', 'BC(BMS)53', 'Hhohho', -26.314512, 31.084424, 1),
+    ('Msahweni', 'BC(BMS)81', 'Hhohho', -26.0345, 31.3116504, 1),
+    ('Msumpe', 'BC(BMS)81', 'Hhohho', -25.891461, 31.342175, 1),
+    ('Mzilikazi', 'BC(BMS)79', 'Lubombo', -26.3736674, 31.775417, 1),
+    ('Ngcwaleni', 'BC(BMS)48', 'Lubombo', -26.7300641, 31.7125005, 1),
+    ('Ngudzeni', 'BC(BMS)120', 'Shiselweni', -26.978927, 31.568502, 2),
+    ('Ngudzeni', 'BC(BMS)31', 'Shiselweni', -27.048401, 31.589241, 2),
+    ('Nkhaba', 'BC(BMS)01', 'Hhohho', -26.16887, 31.13886, 2),
+    ('Nkwalini', 'BC(BMS)92', 'Hhohho', -26.331174, 31.121264, 1),
+    ('Nkwene', 'BC(BMS)21', 'Shiselweni', -26.895831, 31.313313, 1),
+    ('Sigcaweni', 'BC(BMS)36', 'Lubombo', -26.536307, 31.688194, 1),
+    ('Siphofaneni', 'BC(BMS)02', 'Lubombo', -26.67206, 31.709325, 1),
+    ('Siteki Moyeni', 'BC(BMS)88', 'Lubombo', -26.454601, 31.955615, 1),
+    ('Sitsatsaweni', 'BC(BMS)43', 'Lubombo', -26.394524, 32.0289067, 1),
+    ('Zone 4', 'BC(BMS)10', 'Hhohho', -26.335784, 31.121865, 1);
+commit;
+
+grant select on public.bubele_care_sites to anon, authenticated;

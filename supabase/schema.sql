@@ -93,11 +93,13 @@ create unique index if not exists staff_one_pastor_per_site
 create table if not exists public.bubele_care_sites (
     id uuid primary key default gen_random_uuid(),
     site_name text not null,
-    family_code text not null unique,
+    family_code text not null,
     region text default '',
     latitude double precision,
     longitude double precision,
-    created_at timestamptz not null default now()
+    children_count integer not null default 0,
+    created_at timestamptz not null default now(),
+    unique (site_name, family_code)
 );
 
 create table if not exists public.site_updates (

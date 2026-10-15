@@ -269,10 +269,13 @@ TABLE_CONFIGS = {
         key="bubele_care_sites",
         title="Bubele Care",
         file_name="bubele_care_sites.csv",
-        fallback_columns=("site_name", "family_code", "region", "latitude", "longitude"),
+        fallback_columns=("site_name", "family_code", "region", "latitude", "longitude", "children_count"),
         unique_keys=("site_name", "family_code"),
         sort_keys=("site_name", "family_code"),
-        intro="Bubele Care rows are kept in their own seed file.",
+        intro=(
+            "Bubele Care families, one row per area + family code. "
+            "Latitude is negative in Eswatini (e.g. -26.04755). `children_count` is the number of children."
+        ),
     ),
 }
 

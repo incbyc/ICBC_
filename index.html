@@ -4016,6 +4016,8 @@
             } else {
                 var familyCode = props['Family Code'] || 'N/A';
                 var linkedSite = props['Site'] || '—';
+                var bubeleRegion = props['Region'] || '';
+                var childrenCount = props['Children'];
                 bodyHtml +=
                     '<div class="sidebar-panel-inner">' +
                     '<div class="sidebar-sheet">' +
@@ -4033,7 +4035,14 @@
                     '<div class="sidebar-fact-item">' +
                     '<i class="fas fa-map-marker-alt" aria-hidden="true"></i>' +
                     '<div class="fact-body"><div class="fact-lbl">Location</div>' +
-                    '<div class="fact-val">' + escapeHtml(linkedSite) + '</div></div></div>' +
+                    '<div class="fact-val">' + escapeHtml(linkedSite) +
+                    (bubeleRegion ? ', ' + escapeHtml(bubeleRegion) : '') + '</div></div></div>' +
+                    (childrenCount != null && childrenCount !== ''
+                        ? '<div class="sidebar-fact-item">' +
+                            '<i class="fas fa-child" aria-hidden="true"></i>' +
+                            '<div class="fact-body"><div class="fact-lbl">Children</div>' +
+                            '<div class="fact-val">' + escapeHtml(String(childrenCount)) + '</div></div></div>'
+                        : '') +
                     '</div>' +
                     '</section>' +
                     '<section class="sidebar-block">' +
@@ -7003,6 +7012,37 @@
             }
         });
         map.addLayer(layer_HomeSites);
+
+        // Replace the bundled data/HomeSites.js families with the live Supabase list when available.
+        function loadBubeleSitesFromSupabase() {
+            return supabaseRestWithTimeout(
+                'bubele_care_sites?select=site_name,family_code,region,latitude,longitude,children_count&order=site_name'
+            )
+                .then(function (rows) {
+                    var features = (rows || []).map(function (row) {
+                        var lat = parseMapCoord(row.latitude);
+                        var lng = parseMapCoord(row.longitude);
+                        if (isNaN(lat) || isNaN(lng)) return null;
+                        return {
+                            type: 'Feature',
+                            properties: {
+                                'Site': row.site_name || '',
+                                'Family Code': row.family_code || '',
+                                'Region': row.region || '',
+                                'Children': row.children_count
+                            },
+                            geometry: { type: 'Point', coordinates: [lng, lat] }
+                        };
+                    }).filter(Boolean);
+                    if (!features.length) return;
+                    layer_HomeSites.clearLayers();
+                    layer_HomeSites.addData({ type: 'FeatureCollection', features: features });
+                })
+                .catch(function (err) {
+                    console.warn('[ICBC map] Using bundled Bubele Care list:', err && err.message);
+                });
+        }
+        loadBubeleSitesFromSupabase();
 
         var title = new L.Control();
         title.onAdd = function (map) {
