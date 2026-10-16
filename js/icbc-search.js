@@ -160,6 +160,34 @@ function registerIcbcSiteMarker(layer, props) {
     }
 }
 
+// Letters and digits only, so "BMS 18", "bms18" and "BC(BMS)18" all match.
+function compactSearchText(value) {
+    return normalizeSearchText(value).replace(/[^a-z0-9]+/g, '');
+}
+
+function registerBubeleFamilyMarker(layer, props) {
+    var code = String(props['Family Code'] || '').trim();
+    var site = String(props['Site'] || '').trim();
+    var region = String(props['Region'] || '').trim();
+    if (!code && !site) return;
+
+    mapSearchIndex.push({
+        id: 'family:' + normalizeSearchText(code) + ':' + normalizeSearchText(site),
+        title: code || site,
+        meta: [site, region].filter(Boolean).join(', ') + ' · Bubele Care family',
+        searchText: normalizeSearchText(code + ' ' + site + ' ' + region + ' bubele care family'),
+        compactText: compactSearchText(code),
+        entry: { kind: 'bubele', props: props, layer: layer, latlng: layer.getLatLng() }
+    });
+}
+
+// Bubele markers are rebuilt when the Supabase list loads; drop the old search entries first.
+function clearBubeleSearchEntries() {
+    for (var i = mapSearchIndex.length - 1; i >= 0; i--) {
+        if (mapSearchIndex[i].id.indexOf('family:') === 0) mapSearchIndex.splice(i, 1);
+    }
+}
+
 function registerPastorFamilyRow(row) {
     var slug = (row.site_slug || '').trim().toLowerCase();
     var role = (row.role || '').trim();
@@ -209,11 +237,14 @@ function registerStaffRow(row) {
 function searchMapIndex(query, limit) {
     var q = normalizeSearchText(query);
     if (!q) return [];
+    var qCompact = compactSearchText(query);
     var matches = [];
     var i;
     for (i = 0; i < mapSearchIndex.length; i++) {
-        if (mapSearchIndex[i].searchText.indexOf(q) !== -1) {
-            matches.push(mapSearchIndex[i]);
+        var item = mapSearchIndex[i];
+        if (item.searchText.indexOf(q) !== -1 ||
+            (qCompact && item.compactText && item.compactText.indexOf(qCompact) !== -1)) {
+            matches.push(item);
         }
     }
     matches.sort(function (a, b) {
@@ -228,7 +259,7 @@ function searchMapIndex(query, limit) {
 function focusSearchEntry(entry) {
     if (!entry || !entry.layer) return;
     if (typeof window.openSiteSidebar === 'function') {
-        window.openSiteSidebar('icbc', entry.props, entry.layer);
+        window.openSiteSidebar(entry.kind || 'icbc', entry.props, entry.layer);
     }
     if (typeof window.scheduleFlyToMarker === 'function') {
         window.scheduleFlyToMarker(entry.layer);
