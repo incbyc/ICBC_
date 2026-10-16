@@ -94,7 +94,28 @@ function ingestLayerLabel(layer, id, engine) {
     }
 }
 
+var SITE_LABEL_GAP_PX = 4;
+
+function setSiteLabelVisible(label, visible) {
+    label.style.display = 'block';
+    label.style.visibility = visible ? 'visible' : 'hidden';
+    label.style.opacity = visible ? 1 : 0;
+    label.style.transition = 'opacity 0.15s';
+    label.style.pointerEvents = visible ? 'auto' : 'none';
+    label.style.cursor = 'pointer';
+    label.dataset.siteLabelShown = visible ? '1' : '0';
+}
+
+function rectsOverlap(a, b) {
+    return a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+}
+
+// Show as many site-name labels as fit without overlapping; the rest hide until
+// zooming in spreads them apart. Runs on every zoom/pan via refreshSiteNameLabels().
 function showAllSiteNameLabels(siteGroups) {
+    var candidates = [];
+    var viewW = window.innerWidth;
+    var viewH = window.innerHeight;
     (siteGroups || []).forEach(function (group) {
         if (!group || !group.eachLayer) return;
         group.eachLayer(function (layer) {
@@ -102,12 +123,32 @@ function showAllSiteNameLabels(siteGroups) {
             var label = getTooltipContainer(layer);
             if (!label) return;
             label.style.display = 'block';
-            label.style.visibility = 'visible';
-            label.style.opacity = 1;
-            label.style.transition = 'opacity 0.15s';
-            label.style.pointerEvents = 'auto';
-            label.style.cursor = 'pointer';
+            var r = label.getBoundingClientRect();
+            if (!r.width || r.right < 0 || r.bottom < 0 || r.left > viewW || r.top > viewH) {
+                setSiteLabelVisible(label, false);
+                return;
+            }
+            candidates.push({
+                label: label,
+                rect: {
+                    left: r.left - SITE_LABEL_GAP_PX,
+                    right: r.right + SITE_LABEL_GAP_PX,
+                    top: r.top - SITE_LABEL_GAP_PX,
+                    bottom: r.bottom + SITE_LABEL_GAP_PX
+                },
+                // Challenge Ministries first, then labels already showing (less flicker).
+                rank: (label.classList.contains('css_CMS_5') ? 0 : 2) -
+                    (label.dataset.siteLabelShown === '1' ? 1 : 0)
+            });
         });
+    });
+
+    candidates.sort(function (a, b) { return a.rank - b.rank; });
+    var placed = [];
+    candidates.forEach(function (c) {
+        var fits = placed.every(function (rect) { return !rectsOverlap(rect, c.rect); });
+        if (fits) placed.push(c.rect);
+        setSiteLabelVisible(c.label, fits);
     });
 }
 

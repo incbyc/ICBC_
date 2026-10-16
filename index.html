@@ -3272,7 +3272,7 @@
         <script src="js/rbush.min.js"></script>
         <script src="js/labelgun.min.js"></script>
         <!-- ?v= makes browsers fetch fresh copies; change it whenever these files change. -->
-        <script src="js/labels.js?v=2026-10-16"></script>
+        <script src="js/labels.js?v=2026-10-16b"></script>
         <script src="js/icbc-site-profiles-data.js?v=2026-10-16"></script>
         <script src="js/icbc-weekly-metrics-data.js?v=2026-10-16"></script>
         <script src="js/icbc-network-impact-data.js?v=2026-10-16"></script>
@@ -3291,6 +3291,8 @@
         var highlightLayer;
         function highlightFeature(e) {
             highlightLayer = e.target;
+            // Marker pins have no vector style to highlight.
+            if (typeof highlightLayer.setStyle !== 'function') return;
             if (e.target.feature.geometry.type === 'LineString') {
                 highlightLayer.setStyle({
                     color: '#ffff00',
