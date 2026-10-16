@@ -7009,6 +7009,7 @@
                     mouseover: highlightFeature,
                 });
                 bindSidebarClick(layer, 'bubele', feature.properties);
+                registerBubeleFamilyMarker(layer, feature.properties);
             }
         });
         map.addLayer(layer_HomeSites);
@@ -7035,6 +7036,7 @@
                         };
                     }).filter(Boolean);
                     if (!features.length) return;
+                    clearBubeleSearchEntries();
                     layer_HomeSites.clearLayers();
                     layer_HomeSites.addData({ type: 'FeatureCollection', features: features });
                 })
