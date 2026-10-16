@@ -3271,21 +3271,22 @@
         <script src="js/Autolinker.min.js"></script>
         <script src="js/rbush.min.js"></script>
         <script src="js/labelgun.min.js"></script>
-        <script src="js/labels.js"></script>
-        <script src="js/icbc-site-profiles-data.js"></script>
-        <script src="js/icbc-weekly-metrics-data.js"></script>
-        <script src="js/icbc-network-impact-data.js"></script>
-        <script src="js/icbc-search.js"></script>
-        <script src="js/icbc-catchment.js"></script>
+        <!-- ?v= makes browsers fetch fresh copies; change it whenever these files change. -->
+        <script src="js/labels.js?v=2026-10-16"></script>
+        <script src="js/icbc-site-profiles-data.js?v=2026-10-16"></script>
+        <script src="js/icbc-weekly-metrics-data.js?v=2026-10-16"></script>
+        <script src="js/icbc-network-impact-data.js?v=2026-10-16"></script>
+        <script src="js/icbc-search.js?v=2026-10-16"></script>
+        <script src="js/icbc-catchment.js?v=2026-10-16"></script>
         <script src="js/leaflet-measure.js"></script>
-        <script src="data/eSwatiniRegions_2.js"></script>
-        <script src="data/eSwatiniOutline.js"></script>
-        <script src="data/7kmCatchmentArea_3.js"></script>
-        <script src="data/Roads_4.js"></script>
-        <script src="data/CMS_5.js"></script>
-        <script src="data/ICBCSites_6.js"></script>
-        <script src="data/HomeSites.js"></script>
-        <script src="data/icbc_teachers.js"></script>
+        <script src="data/eSwatiniRegions_2.js?v=2026-10-16"></script>
+        <script src="data/eSwatiniOutline.js?v=2026-10-16"></script>
+        <script src="data/7kmCatchmentArea_3.js?v=2026-10-16"></script>
+        <script src="data/Roads_4.js?v=2026-10-16"></script>
+        <script src="data/CMS_5.js?v=2026-10-16"></script>
+        <script src="data/ICBCSites_6.js?v=2026-10-16"></script>
+        <script src="data/HomeSites.js?v=2026-10-16"></script>
+        <script src="data/icbc_teachers.js?v=2026-10-16"></script>
         <script>
         var highlightLayer;
         function highlightFeature(e) {
@@ -7009,7 +7010,10 @@
                     mouseover: highlightFeature,
                 });
                 bindSidebarClick(layer, 'bubele', feature.properties);
-                registerBubeleFamilyMarker(layer, feature.properties);
+                // Guarded so a cached older icbc-search.js cannot stop the map from loading.
+                if (typeof registerBubeleFamilyMarker === 'function') {
+                    registerBubeleFamilyMarker(layer, feature.properties);
+                }
             }
         });
         map.addLayer(layer_HomeSites);
@@ -7036,7 +7040,7 @@
                         };
                     }).filter(Boolean);
                     if (!features.length) return;
-                    clearBubeleSearchEntries();
+                    if (typeof clearBubeleSearchEntries === 'function') clearBubeleSearchEntries();
                     layer_HomeSites.clearLayers();
                     layer_HomeSites.addData({ type: 'FeatureCollection', features: features });
                 })
