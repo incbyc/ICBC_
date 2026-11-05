@@ -884,6 +884,9 @@
         .cms-dash-section.theme-maize .cms-dash-section-icon { background: linear-gradient(135deg, #f9a825, #fbc02d); }
         .cms-dash-section.theme-maize .cms-dash-stat-icon { background: #fffde7; color: #f57f17; }
 
+        .cms-dash-section.theme-bubele .cms-dash-section-icon { background: linear-gradient(135deg, #ad1457, #ec407a); }
+        .cms-dash-section.theme-bubele .cms-dash-stat-icon { background: #fce4ec; color: #ad1457; }
+
         .cms-dash-section.theme-preschool .cms-dash-section-icon { background: linear-gradient(135deg, #1565c0, #42a5f5); }
         .cms-dash-section.theme-preschool .cms-dash-stat-icon { background: #e3f2fd; color: #1565c0; }
 
@@ -5180,6 +5183,17 @@
                 cmsDashStat('fa-hands-helping', 'Farmers supported', formatMetricValue(s.total_farmers_supported))
             );
 
+            if (Number(s.bubele_families) > 0) {
+                html += cmsDashSection(
+                    'Bubele Care',
+                    'fa-home',
+                    'theme-bubele',
+                    'Children reunified with families',
+                    cmsDashStat('fa-home', 'Families reunified', formatMetricValue(s.bubele_families)) +
+                    cmsDashStat('fa-child', 'Children reunified', formatMetricValue(s.bubele_children))
+                );
+            }
+
             if (preschool) {
                 html += cmsDashSection(
                     'Pre-school',
@@ -5331,6 +5345,28 @@
             });
         }
 
+        // One row per Bubele Care family; children_count is the children reunified with it.
+        function fetchBubeleReunificationTotals() {
+            return supabaseRestWithTimeout('bubele_care_sites?select=children_count')
+                .then(function (rows) {
+                    if (!rows || !rows.length) throw new Error('no rows');
+                    return rows.map(function (row) { return row.children_count; });
+                })
+                .catch(function () {
+                    // Supabase unavailable or not migrated yet: use the bundled data/HomeSites.js list.
+                    var features = (typeof json_HomeSites !== 'undefined' && json_HomeSites.features) || [];
+                    return features.map(function (f) { return f.properties && f.properties.Children; });
+                })
+                .then(function (childCounts) {
+                    return {
+                        bubele_families: childCounts.length,
+                        bubele_children: childCounts.reduce(function (sum, n) {
+                            return sum + (Number(n) || 0);
+                        }, 0)
+                    };
+                });
+        }
+
         var cmsNetworkLoadToken = 0;
 
         function loadCmsNetworkImpact() {
@@ -5345,7 +5381,8 @@
                 fetchCmsStatPeriods().catch(function () { return {}; }),
                 supabaseRestWithTimeout('staff?select=role').catch(function () { return []; }),
                 fetchCmsWeeklyTrendData().catch(function () { return []; }),
-                supabaseRestWithTimeout('icbc_sites?select=water_source').catch(function () { return []; })
+                supabaseRestWithTimeout('icbc_sites?select=water_source').catch(function () { return []; }),
+                fetchBubeleReunificationTotals()
             ])
                 .then(function (results) {
                     if (loadToken !== cmsNetworkLoadToken) return;
@@ -5355,6 +5392,7 @@
                     var staffRows = results[4] || [];
                     var weeklyTrendRows = results[5] || [];
                     var siteWaterRows = results[6] || [];
+                    var bubeleTotals = results[7] || {};
                     var compassionateCareTotal = getNetworkCompassionateCareTotal();
                     var staffBreakdown = computeNetworkStaffBreakdown(
                         staffRows,
@@ -5366,7 +5404,7 @@
                         staff_compassionate_care: staffBreakdown.compassionate_care,
                         total_staff: staffBreakdown.total,
                         total_compassionate_care: compassionateCareTotal
-                    }, computeNetworkAttendanceBreakdown(weeklyTrendRows));
+                    }, computeNetworkAttendanceBreakdown(weeklyTrendRows), bubeleTotals);
                     // The summary view has no wells column, so count wells from each site's water source.
                     if (siteWaterRows.length) {
                         stats.total_wells_built = siteWaterRows.reduce(function (sum, site) {
@@ -5513,52 +5551,6 @@
             return Math.round((sum / rows.length) * 10) / 10;
         }
 
-        function injectAttendanceBreakdownMetrics(dashboard, averages) {
-            if (!dashboard || !averages) return dashboard;
-            [
-                { key: 'avg_men', title: 'Avg men', field: 'avg_men' },
-                { key: 'avg_women', title: 'Avg women', field: 'avg_women' },
-                { key: 'avg_youth', title: 'Avg youth', field: 'avg_youth' },
-                { key: 'avg_children', title: 'Avg children', field: 'avg_children' }
-            ].forEach(function (def) {
-                if (hasDashboardMetricKey(dashboard.metrics, def.key)) return;
-                var val = Number(averages[def.field]);
-                if (isNaN(val)) return;
-                dashboard.metrics.push({
-                    key: def.key,
-                    title: def.title,
-                    value: val,
-                    format: 'decimal'
-                });
-            });
-            return dashboard;
-        }
-
-        function injectWeeklyDemographicsFromRows(dashboard, weeklyRows) {
-            var attended = (weeklyRows || []).filter(function (row) {
-                return (Number(row.total_attendance) || 0) > 0;
-            });
-            if (!attended.length) return dashboard;
-            return injectAttendanceBreakdownMetrics(dashboard, {
-                avg_men: averageWeeklyField(attended, 'men'),
-                avg_women: averageWeeklyField(attended, 'women'),
-                avg_youth: averageWeeklyField(attended, 'youth'),
-                avg_children: averageWeeklyField(attended, 'children')
-            });
-        }
-
-        function injectWeeklyDemographicsMetrics(dashboard, siteSlug) {
-            var slug = String(siteSlug || '').trim().toLowerCase();
-            if (!slug) return dashboard;
-
-            var weekly = typeof ICBC_WEEKLY_METRICS_BY_SLUG !== 'undefined'
-                ? ICBC_WEEKLY_METRICS_BY_SLUG[slug]
-                : null;
-            if (!weekly || !(Number(weekly.weeks_recorded) > 0)) return dashboard;
-
-            return injectAttendanceBreakdownMetrics(dashboard, weekly);
-        }
-
         function getCompassionateCareMemberCount(siteSlug) {
             var slug = String(siteSlug || '').trim().toLowerCase();
             if (!slug) return 0;
@@ -5620,9 +5612,20 @@
                 });
             }
 
-            dashboard = injectWeeklyDemographicsFromRows(dashboard, dashboard._weekly_stat_rows);
-            return injectWeeklyDemographicsMetrics(dashboard, siteSlug);
+            // Site sidebars show average attendance only, not the men/women/youth/children split
+            // (the Supabase sidebar view still sends it, so drop it here).
+            dashboard.metrics = dashboard.metrics.filter(function (m) {
+                return !SITE_HIDDEN_ATTENDANCE_KEYS[m.key];
+            });
+            return dashboard;
         }
+
+        var SITE_HIDDEN_ATTENDANCE_KEYS = {
+            avg_men: true,
+            avg_women: true,
+            avg_youth: true,
+            avg_children: true
+        };
 
         function isStatisticsMetric(metric) {
             if (!metric) return false;
